@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: econapi
+    runtime: python
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.10
+      - key: ECONAPI_ENVIRONMENT
+        value: production
+      - key: ECONAPI_VALID_API_KEYS
+        value: '["rapidapi-gateway-secret-key-prod"]'
+      - key: ECONAPI_CORS_ORIGINS
+        value: '["*"]'
