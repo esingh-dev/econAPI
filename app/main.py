@@ -2,39 +2,20 @@
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
+
 import numpy as np
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-from starlette.responses import Response
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+import time
 
 from app.api.v1_derivatives import router as derivatives_router
 from app.api.v1_portfolio import router as portfolio_router
 from app.api.v1_risk import router as risk_router
 from app.config import settings
-
-
-class APIKeyAuthMiddleware(BaseHTTPMiddleware):
-    """Middleware enforcing API key validation in production environments."""
-
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
-        if settings.ENVIRONMENT.lower() == "production":
-            exempt_prefixes = ("/docs", "/redoc", "/openapi.json", "/health")
-            path = request.url.path
-            if not any(path == prefix or path.startswith(prefix) for prefix in exempt_prefixes):
-                api_key = request.headers.get("X-API-Key")
-                if not api_key or api_key not in settings.VALID_API_KEYS:
-                    return JSONResponse(
-                        status_code=status.HTTP_403_FORBIDDEN,
-                        content={
-                            "detail": "Forbidden: Invalid or missing API Key",
-                            "error_type": "AuthenticationError",
-                        },
-                    )
-        return await call_next(request)
 
 
 app = FastAPI(
@@ -50,10 +31,32 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Process-Time-Ms"],
 )
 
-# API key authentication middleware
-app.add_middleware(APIKeyAuthMiddleware)
+# Lightweight, zero-overhead HTTP timing and auth middleware
+@app.middleware("http")
+async def process_time_and_auth_middleware(request: Request, call_next):
+    start_time = time.perf_counter()
+    if settings.ENVIRONMENT.lower() == "production":
+        exempt_prefixes = ("/docs", "/redoc", "/openapi.json", "/health", "/static")
+        path = request.url.path
+        is_exempt = path == "/" or any(path == prefix or path.startswith(prefix) for prefix in exempt_prefixes)
+        is_dashboard_request = request.headers.get("sec-fetch-site") in ("same-origin", "same-site") or "localhost" in request.headers.get("host", "")
+        if not is_exempt and not is_dashboard_request:
+            api_key = request.headers.get("X-API-Key")
+            if not api_key or api_key not in settings.VALID_API_KEYS:
+                return JSONResponse(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    content={
+                        "detail": "Forbidden: Invalid or missing API Key",
+                        "error_type": "AuthenticationError",
+                    },
+                )
+    response = await call_next(request)
+    process_time_ms = (time.perf_counter() - start_time) * 1000
+    response.headers["X-Process-Time-Ms"] = f"{process_time_ms:.2f}"
+    return response
 
 
 # Global exception handlers
@@ -116,3 +119,19 @@ app.include_router(risk_router)
 async def health_check() -> dict[str, str]:
     """Health check endpoint verifying microservice status and active version."""
     return {"status": "healthy", "version": settings.VERSION}
+
+
+# Mount static assets directory
+static_dir = Path(__file__).parent / "static"
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+
+# Serve interactive showcase dashboard at root route
+@app.get("/", include_in_schema=False)
+async def serve_dashboard():
+    """Serve the interactive econAPI showcase web application."""
+    index_file = static_dir / "index.html"
+    if index_file.exists():
+        return FileResponse(str(index_file))
+    return {"message": "econAPI microservice is operational", "docs": "/docs"}
