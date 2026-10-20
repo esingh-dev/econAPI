@@ -147,7 +147,7 @@ Navigate to **Plans & Pricing** in RapidAPI Studio and configure these 4 monetiz
 | **Free Sandbox** | **$0.00 / mo** | **500 requests** | 1 req / sec | **Hard Limit** (Stops on cap) | • Access to `/health` and `/v1/derivatives/bsm`<br>• Single-asset Greeks | Academic researchers, students, exploratory developers |
 | **Pro** | **$49.00 / mo** | **25,000 requests** | 10 req / sec | **Soft Limit** ($0.003 / extra req) | • All endpoints unlocked<br>• HRP up to 20 assets<br>• EVT Tail Risk (VaR/CVaR) | Individual quants, crypto traders, boutique wealth advisors |
 | **Ultra** | **$149.00 / mo** | **150,000 requests** | 30 req / sec | **Soft Limit** ($0.0015 / extra req) | • High-priority compute queue<br>• HRP up to 100 assets<br>• Full Heston & Nelson-Siegel | Systematic prop trading desks, hedge fund analysts |
-| **Enterprise** | **$499.00 / mo** | **1,000,000 requests** | 100 req / sec | **Soft Limit** ($0.0008 / extra req) | • Institutional throughput<br>• Unlimited asset clusters<br>• 99.9% uptime SLA<br>• Email & Discord support | FinTech platforms, neo-banks, asset management firms |
+| **Enterprise** | **$499.00 / mo** | **500,000 requests** | 100 req / sec | **Soft Limit** ($0.0008 / extra req) | • Institutional throughput<br>• Unlimited asset clusters<br>• 99.9% uptime SLA<br>• Email & Discord support | FinTech platforms, neo-banks, asset management firms |
 
 ---
 
