@@ -3,7 +3,7 @@
   "info": {
     "title": "econAPI",
     "description": "High-performance quantitative finance microservice supporting derivative pricing, portfolio optimization, and extreme risk analytics.",
-    "version": "1.0.0"
+    "version": "2.0.0"
   },
   "paths": {
     "/v1/derivatives/bsm": {
@@ -1518,6 +1518,352 @@
         }
       }
     },
+    "/v1/market/prices": {
+      "get": {
+        "tags": [
+          "Market Integration (v2.0)"
+        ],
+        "summary": "Get Historical Prices",
+        "description": "Retrieve historical prices with automated data quality checks (stale prices, outliers, missing values).",
+        "operationId": "get_historical_prices_v1_market_prices_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Ticker symbol (e.g. SPY, AAPL, TLT)",
+              "title": "Symbol"
+            },
+            "description": "Ticker symbol (e.g. SPY, AAPL, TLT)"
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start date YYYY-MM-DD",
+              "title": "Start Date"
+            },
+            "description": "Start date YYYY-MM-DD"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End date YYYY-MM-DD",
+              "title": "End Date"
+            },
+            "description": "End date YYYY-MM-DD"
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Bar interval: 1d, 1wk, 1mo",
+              "default": "1d",
+              "title": "Interval"
+            },
+            "description": "Bar interval: 1d, 1wk, 1mo"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoricalPricesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/market/options-chain": {
+      "get": {
+        "tags": [
+          "Market Integration (v2.0)"
+        ],
+        "summary": "Get Options Chain",
+        "description": "Retrieve full listed option chain with bids, asks, open interest, and implied volatility.",
+        "operationId": "get_options_chain_v1_market_options_chain_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Underlying ticker (e.g. SPY, AAPL)",
+              "title": "Symbol"
+            },
+            "description": "Underlying ticker (e.g. SPY, AAPL)"
+          },
+          {
+            "name": "expiration",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Expiration date YYYY-MM-DD (defaults to nearest)",
+              "title": "Expiration"
+            },
+            "description": "Expiration date YYYY-MM-DD (defaults to nearest)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptionChainResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/market/live-surface": {
+      "post": {
+        "tags": [
+          "Market Integration (v2.0)"
+        ],
+        "summary": "Calibrate Live Market Surface",
+        "description": "Calibrate Gatheral's SVI volatility surface model directly on live exchange option chains\n\nand verify Roger Lee wing bounds and Gatheral butterfly arbitrage conditions.",
+        "operationId": "calibrate_live_market_surface_v1_market_live_surface_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveSVIRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveSVIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/market/treasury-curve": {
+      "get": {
+        "tags": [
+          "Market Integration (v2.0)"
+        ],
+        "summary": "Get Live Treasury Curve",
+        "description": "Retrieve active US Treasury yield curve from Federal Reserve (FRED)\n\nand calibrate Nelson-Siegel-Svensson term structure with discount factors.",
+        "operationId": "get_live_treasury_curve_v1_market_treasury_curve_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveTreasuryCurveResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/backtest/walk-forward": {
+      "post": {
+        "tags": [
+          "Backtesting & Research (v2.0)"
+        ],
+        "summary": "Execute Walk Forward Backtest",
+        "description": "Execute point-in-time walk-forward backtest avoiding look-ahead bias\n\nincorporating realistic slippage, transaction friction, and weight drift.",
+        "operationId": "execute_walk_forward_backtest_v1_backtest_walk_forward_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WalkForwardBacktestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalkForwardBacktestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/batch/bsm": {
+      "post": {
+        "tags": [
+          "Batch Processing (v2.0)"
+        ],
+        "summary": "Batch Price Options",
+        "description": "Batch-price up to 500 options concurrently with complete Greeks.",
+        "operationId": "batch_price_options_v1_batch_bsm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchBSMRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchBSMResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/batch/bonds": {
+      "post": {
+        "tags": [
+          "Batch Processing (v2.0)"
+        ],
+        "summary": "Batch Price Bond Portfolio",
+        "description": "Price an entire bond portfolio and compute aggregated market value, portfolio duration, and total DV01.",
+        "operationId": "batch_price_bond_portfolio_v1_batch_bonds_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchBondPortfolioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchBondPortfolioResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -2027,6 +2373,155 @@
         ],
         "title": "BarrierOptionResponse"
       },
+      "BatchBSMItemResult": {
+        "properties": {
+          "index": {
+            "type": "integer",
+            "title": "Index"
+          },
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BSMResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "index",
+          "success"
+        ],
+        "title": "BatchBSMItemResult"
+      },
+      "BatchBSMRequest": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BSMRequest"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Items",
+            "description": "List of options to price"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "BatchBSMRequest"
+      },
+      "BatchBSMResponse": {
+        "properties": {
+          "total_requested": {
+            "type": "integer",
+            "title": "Total Requested"
+          },
+          "total_succeeded": {
+            "type": "integer",
+            "title": "Total Succeeded"
+          },
+          "compute_time_ms": {
+            "type": "number",
+            "title": "Compute Time Ms"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/BatchBSMItemResult"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_requested",
+          "total_succeeded",
+          "compute_time_ms",
+          "results"
+        ],
+        "title": "BatchBSMResponse"
+      },
+      "BatchBondPortfolioRequest": {
+        "properties": {
+          "bonds": {
+            "items": {
+              "$ref": "#/components/schemas/BondPortfolioItem"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Bonds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bonds"
+        ],
+        "title": "BatchBondPortfolioRequest"
+      },
+      "BatchBondPortfolioResponse": {
+        "properties": {
+          "total_bonds": {
+            "type": "integer",
+            "title": "Total Bonds"
+          },
+          "portfolio_market_value": {
+            "type": "number",
+            "title": "Portfolio Market Value"
+          },
+          "portfolio_modified_duration": {
+            "type": "number",
+            "title": "Portfolio Modified Duration"
+          },
+          "portfolio_convexity": {
+            "type": "number",
+            "title": "Portfolio Convexity"
+          },
+          "portfolio_total_dv01": {
+            "type": "number",
+            "title": "Portfolio Total Dv01"
+          },
+          "individual_bonds": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Individual Bonds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_bonds",
+          "portfolio_market_value",
+          "portfolio_modified_duration",
+          "portfolio_convexity",
+          "portfolio_total_dv01",
+          "individual_bonds"
+        ],
+        "title": "BatchBondPortfolioResponse"
+      },
       "BinaryOptionRequest": {
         "properties": {
           "S": {
@@ -2269,6 +2764,31 @@
           "posterior_weights"
         ],
         "title": "BlackLittermanResponse"
+      },
+      "BondPortfolioItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique bond or CUSIP identifier"
+          },
+          "position_size": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Position Size",
+            "description": "Number of bonds held or face value multiplier",
+            "default": 1.0
+          },
+          "params": {
+            "$ref": "#/components/schemas/BondPriceRequest"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "params"
+        ],
+        "title": "BondPortfolioItem"
       },
       "BondPriceRequest": {
         "properties": {
@@ -3945,6 +4465,79 @@
         "title": "HestonResponse",
         "description": "Heston model option price and convergence diagnostics."
       },
+      "HistoricalPricesResponse": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "dates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Dates"
+          },
+          "open": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Open"
+          },
+          "high": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "High"
+          },
+          "low": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Low"
+          },
+          "close": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Close"
+          },
+          "volume": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Volume"
+          },
+          "adjusted_close": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Adjusted Close"
+          },
+          "quality_report": {
+            "$ref": "#/components/schemas/QualityReportSchema"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "dates",
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume",
+          "adjusted_close",
+          "quality_report"
+        ],
+        "title": "HistoricalPricesResponse"
+      },
       "HullWhiteRequest": {
         "properties": {
           "r0": {
@@ -4093,6 +4686,168 @@
           "modified_duration"
         ],
         "title": "KRDResponse"
+      },
+      "LiveSVIRequest": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol",
+            "description": "Equity/ETF ticker symbol",
+            "default": "SPY"
+          },
+          "expiration": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiration",
+            "description": "Optional target expiration date YYYY-MM-DD"
+          },
+          "min_open_interest": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Min Open Interest",
+            "description": "Liquidity filter for options",
+            "default": 5
+          }
+        },
+        "type": "object",
+        "title": "LiveSVIRequest"
+      },
+      "LiveSVIResponse": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "expiration_date": {
+            "type": "string",
+            "title": "Expiration Date"
+          },
+          "spot_price": {
+            "type": "number",
+            "title": "Spot Price"
+          },
+          "forward_estimate": {
+            "type": "number",
+            "title": "Forward Estimate"
+          },
+          "strikes": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Strikes"
+          },
+          "market_vols": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Market Vols"
+          },
+          "svi_params": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Svi Params"
+          },
+          "fitted_vols": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Fitted Vols"
+          },
+          "rmse": {
+            "type": "number",
+            "title": "Rmse"
+          },
+          "roger_lee_satisfied": {
+            "type": "boolean",
+            "title": "Roger Lee Satisfied"
+          },
+          "butterfly_arbitrage_free": {
+            "type": "boolean",
+            "title": "Butterfly Arbitrage Free"
+          },
+          "quality_report": {
+            "$ref": "#/components/schemas/QualityReportSchema"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "expiration_date",
+          "spot_price",
+          "forward_estimate",
+          "strikes",
+          "market_vols",
+          "svi_params",
+          "fitted_vols",
+          "rmse",
+          "roger_lee_satisfied",
+          "butterfly_arbitrage_free",
+          "quality_report"
+        ],
+        "title": "LiveSVIResponse"
+      },
+      "LiveTreasuryCurveResponse": {
+        "properties": {
+          "as_of_date": {
+            "type": "string",
+            "title": "As Of Date"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "observed_tenors": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Observed Tenors"
+          },
+          "observed_yields": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Observed Yields"
+          },
+          "nss_fitted": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Nss Fitted"
+          },
+          "discount_factors": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Discount Factors"
+          },
+          "quality_report": {
+            "$ref": "#/components/schemas/QualityReportSchema"
+          }
+        },
+        "type": "object",
+        "required": [
+          "as_of_date",
+          "source",
+          "observed_tenors",
+          "observed_yields",
+          "nss_fitted",
+          "discount_factors",
+          "quality_report"
+        ],
+        "title": "LiveTreasuryCurveResponse"
       },
       "MarketQuote": {
         "properties": {
@@ -4798,6 +5553,110 @@
         ],
         "title": "NoArbitrageBounds"
       },
+      "OptionChainResponse": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "spot_price": {
+            "type": "number",
+            "title": "Spot Price"
+          },
+          "expiration_date": {
+            "type": "string",
+            "title": "Expiration Date"
+          },
+          "available_expirations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Available Expirations"
+          },
+          "calls": {
+            "items": {
+              "$ref": "#/components/schemas/OptionItemSchema"
+            },
+            "type": "array",
+            "title": "Calls"
+          },
+          "puts": {
+            "items": {
+              "$ref": "#/components/schemas/OptionItemSchema"
+            },
+            "type": "array",
+            "title": "Puts"
+          },
+          "quality_report": {
+            "$ref": "#/components/schemas/QualityReportSchema"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "spot_price",
+          "expiration_date",
+          "available_expirations",
+          "calls",
+          "puts",
+          "quality_report"
+        ],
+        "title": "OptionChainResponse"
+      },
+      "OptionItemSchema": {
+        "properties": {
+          "strike": {
+            "type": "number",
+            "title": "Strike"
+          },
+          "option_type": {
+            "type": "string",
+            "title": "Option Type"
+          },
+          "bid": {
+            "type": "number",
+            "title": "Bid"
+          },
+          "ask": {
+            "type": "number",
+            "title": "Ask"
+          },
+          "last_price": {
+            "type": "number",
+            "title": "Last Price"
+          },
+          "volume": {
+            "type": "integer",
+            "title": "Volume"
+          },
+          "open_interest": {
+            "type": "integer",
+            "title": "Open Interest"
+          },
+          "implied_volatility": {
+            "type": "number",
+            "title": "Implied Volatility"
+          },
+          "moneyness": {
+            "type": "number",
+            "title": "Moneyness"
+          }
+        },
+        "type": "object",
+        "required": [
+          "strike",
+          "option_type",
+          "bid",
+          "ask",
+          "last_price",
+          "volume",
+          "open_interest",
+          "implied_volatility",
+          "moneyness"
+        ],
+        "title": "OptionItemSchema"
+      },
       "PortfolioMetricsRequest": {
         "properties": {
           "returns": {
@@ -4930,6 +5789,47 @@
           "ulcer_index"
         ],
         "title": "PortfolioMetricsResponse"
+      },
+      "QualityReportSchema": {
+        "properties": {
+          "is_valid": {
+            "type": "boolean",
+            "title": "Is Valid"
+          },
+          "total_records": {
+            "type": "integer",
+            "title": "Total Records"
+          },
+          "missing_records_filled": {
+            "type": "integer",
+            "title": "Missing Records Filled"
+          },
+          "stale_price_detected": {
+            "type": "boolean",
+            "title": "Stale Price Detected"
+          },
+          "anomalous_spikes": {
+            "type": "integer",
+            "title": "Anomalous Spikes"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_valid",
+          "total_records",
+          "missing_records_filled",
+          "stale_price_detected",
+          "anomalous_spikes",
+          "warnings"
+        ],
+        "title": "QualityReportSchema"
       },
       "RiskParityRequest": {
         "properties": {
@@ -5594,6 +6494,160 @@
           "B"
         ],
         "title": "VasicekResponse"
+      },
+      "WalkForwardBacktestRequest": {
+        "properties": {
+          "returns": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "minItems": 40,
+            "title": "Returns",
+            "description": "T x N historical returns matrix"
+          },
+          "asset_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Asset Names",
+            "description": "Names of the N assets"
+          },
+          "strategy": {
+            "type": "string",
+            "enum": [
+              "hrp",
+              "equal_weight",
+              "inverse_vol"
+            ],
+            "title": "Strategy",
+            "default": "hrp"
+          },
+          "train_window": {
+            "type": "integer",
+            "minimum": 20.0,
+            "title": "Train Window",
+            "description": "Rolling training lookback in days",
+            "default": 60
+          },
+          "rebalance_freq": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Rebalance Freq",
+            "description": "Days between portfolio rebalancing",
+            "default": 20
+          },
+          "tx_cost_bps": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Tx Cost Bps",
+            "description": "Transaction fee in basis points",
+            "default": 10.0
+          },
+          "slippage_bps": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Slippage Bps",
+            "description": "Slippage friction in basis points",
+            "default": 5.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "returns",
+          "asset_names"
+        ],
+        "title": "WalkForwardBacktestRequest"
+      },
+      "WalkForwardBacktestResponse": {
+        "properties": {
+          "strategy": {
+            "type": "string",
+            "title": "Strategy"
+          },
+          "n_periods": {
+            "type": "integer",
+            "title": "N Periods"
+          },
+          "cumulative_return": {
+            "type": "number",
+            "title": "Cumulative Return"
+          },
+          "annualized_return": {
+            "type": "number",
+            "title": "Annualized Return"
+          },
+          "annualized_volatility": {
+            "type": "number",
+            "title": "Annualized Volatility"
+          },
+          "sharpe_ratio": {
+            "type": "number",
+            "title": "Sharpe Ratio"
+          },
+          "sortino_ratio": {
+            "type": "number",
+            "title": "Sortino Ratio"
+          },
+          "calmar_ratio": {
+            "type": "number",
+            "title": "Calmar Ratio"
+          },
+          "max_drawdown": {
+            "type": "number",
+            "title": "Max Drawdown"
+          },
+          "mean_turnover": {
+            "type": "number",
+            "title": "Mean Turnover"
+          },
+          "equity_curve": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Equity Curve"
+          },
+          "drawdowns": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Drawdowns"
+          },
+          "weights_snapshots": {
+            "items": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Weights Snapshots"
+          }
+        },
+        "type": "object",
+        "required": [
+          "strategy",
+          "n_periods",
+          "cumulative_return",
+          "annualized_return",
+          "annualized_volatility",
+          "sharpe_ratio",
+          "sortino_ratio",
+          "calmar_ratio",
+          "max_drawdown",
+          "mean_turnover",
+          "equity_curve",
+          "drawdowns",
+          "weights_snapshots"
+        ],
+        "title": "WalkForwardBacktestResponse"
       }
     }
   }
