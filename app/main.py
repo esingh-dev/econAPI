@@ -3,14 +3,20 @@
 from __future__ import annotations
 
 import os
+import sys
+import time
 from pathlib import Path
+
+# Ensure root directory is always on sys.path
+root_dir = Path(__file__).resolve().parent.parent
+if str(root_dir) not in sys.path:
+    sys.path.insert(0, str(root_dir))
 
 import numpy as np
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-import time
 
 from app.api.v1_derivatives import router as derivatives_router
 from app.api.v1_fixed_income import router as fixed_income_router
