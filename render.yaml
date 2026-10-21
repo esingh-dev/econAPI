@@ -15,6 +15,6 @@ services:
       - key: ECONAPI_ENVIRONMENT
         value: production
       - key: ECONAPI_VALID_API_KEYS
-        value: '["rapidapi-gateway-secret-key-prod"]'
+        value: '["econ_live_demo_key", "rapidapi-gateway-secret-key-prod", "econ_free_public"]'
       - key: ECONAPI_CORS_ORIGINS
         value: '["*"]'
