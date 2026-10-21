@@ -1,0 +1,5600 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "econAPI",
+    "description": "High-performance quantitative finance microservice supporting derivative pricing, portfolio optimization, and extreme risk analytics.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/v1/derivatives/bsm": {
+      "post": {
+        "tags": [
+          "Derivatives"
+        ],
+        "summary": "Price Bsm",
+        "description": "Price European options under generalized BSM with continuous dividend yield q.\n\nReturns analytical price, first-order Greeks (Delta, Gamma, Vega, Theta, Rho),\nhigher-order Greeks (Vanna, Volga, Charm, Veta, Color, Speed, Ultima),\nno-arbitrage bound checks, and optional numerical finite-difference validation.",
+        "operationId": "price_bsm_v1_derivatives_bsm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BSMRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BSMResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/derivatives/heston": {
+      "post": {
+        "tags": [
+          "Derivatives"
+        ],
+        "summary": "Price Heston",
+        "description": "Price European options under the Heston stochastic volatility model.\n\nUses Albrecher et al. (2007) continuous Little Trap characteristic function formulation\nwith adaptive Gauss-Kronrod quadrature, Feller condition verification, and robust implied volatility.",
+        "operationId": "price_heston_v1_derivatives_heston_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HestonRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HestonResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/derivatives/heston/calibrate": {
+      "post": {
+        "tags": [
+          "Derivatives"
+        ],
+        "summary": "Calibrate Heston Endpoint",
+        "description": "Calibrate Heston model parameters (v0, kappa, theta, xi, rho) to market option quotes.",
+        "operationId": "calibrate_heston_endpoint_v1_derivatives_heston_calibrate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HestonCalibrationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HestonCalibrationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/derivatives/tree": {
+      "post": {
+        "tags": [
+          "Derivatives"
+        ],
+        "summary": "Price Tree Option",
+        "description": "Price European or American options via Binomial (CRR / Jarrow-Rudd) or Trinomial Trees.\n\nSupports continuous dividend yield q and early exercise premium extraction.",
+        "operationId": "price_tree_option_v1_derivatives_tree_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TreeOptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TreeOptionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/derivatives/asian": {
+      "post": {
+        "tags": [
+          "Derivatives"
+        ],
+        "summary": "Price Asian Option",
+        "description": "Price Asian options (Geometric exact Kemna-Vorst or Arithmetic Turnbull-Wakeman approximation).",
+        "operationId": "price_asian_option_v1_derivatives_asian_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AsianOptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AsianOptionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/derivatives/barrier": {
+      "post": {
+        "tags": [
+          "Derivatives"
+        ],
+        "summary": "Price Barrier Option",
+        "description": "Price single barrier options (Up/Down, In/Out) via Reiner-Rubinstein analytical formulas with rebate.",
+        "operationId": "price_barrier_option_v1_derivatives_barrier_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BarrierOptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BarrierOptionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/derivatives/binary": {
+      "post": {
+        "tags": [
+          "Derivatives"
+        ],
+        "summary": "Price Binary Option",
+        "description": "Price Cash-or-Nothing and Asset-or-Nothing digital/binary options analytically.",
+        "operationId": "price_binary_option_v1_derivatives_binary_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BinaryOptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BinaryOptionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/derivatives/monte-carlo": {
+      "post": {
+        "tags": [
+          "Derivatives"
+        ],
+        "summary": "Price Monte Carlo",
+        "description": "Simulate option pricing via Monte Carlo with Antithetic and Control Variate variance reduction.",
+        "operationId": "price_monte_carlo_v1_derivatives_monte_carlo_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MonteCarloRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonteCarloResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/derivatives/svi/calibrate": {
+      "post": {
+        "tags": [
+          "Derivatives"
+        ],
+        "summary": "Calibrate Svi Endpoint",
+        "description": "Calibrate SVI raw slice parameters with Roger Lee wing bounds and butterfly arbitrage checks.",
+        "operationId": "calibrate_svi_endpoint_v1_derivatives_svi_calibrate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SVICalibrationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SVICalibrationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/derivatives/svi/calendar-arbitrage": {
+      "post": {
+        "tags": [
+          "Derivatives"
+        ],
+        "summary": "Check Calendar Arbitrage Endpoint",
+        "description": "Verify calendar spread arbitrage across term structure of SVI volatility slices.",
+        "operationId": "check_calendar_arbitrage_endpoint_v1_derivatives_svi_calendar_arbitrage_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarArbitrageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarArbitrageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/fixed-income/nelson-siegel": {
+      "post": {
+        "tags": [
+          "Fixed Income & Yield Curves"
+        ],
+        "summary": "Fit Nelson Siegel Endpoint",
+        "description": "Fit 3-factor Nelson-Siegel term structure model with unit auto-detection and fit diagnostics.",
+        "operationId": "fit_nelson_siegel_endpoint_v1_fixed_income_nelson_siegel_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NelsonSiegelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NelsonSiegelResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/fixed-income/nss": {
+      "post": {
+        "tags": [
+          "Fixed Income & Yield Curves"
+        ],
+        "summary": "Fit Nss Endpoint",
+        "description": "Fit 4-factor / 6-parameter Nelson-Siegel-Svensson (NSS) parametric yield curve.",
+        "operationId": "fit_nss_endpoint_v1_fixed_income_nss_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NSSRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NSSResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/fixed-income/curve-suite": {
+      "post": {
+        "tags": [
+          "Fixed Income & Yield Curves"
+        ],
+        "summary": "Compute Curve Suite Endpoint",
+        "description": "Generate Spot, Instantaneous Forward, Par yield curves, and Discount Factors.",
+        "operationId": "compute_curve_suite_endpoint_v1_fixed_income_curve_suite_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurveSuiteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurveSuiteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/fixed-income/bootstrap": {
+      "post": {
+        "tags": [
+          "Fixed Income & Yield Curves"
+        ],
+        "summary": "Bootstrap Zero Curve Endpoint",
+        "description": "Bootstrap a continuous zero-coupon yield curve from money market deposits, futures, and swaps.",
+        "operationId": "bootstrap_zero_curve_endpoint_v1_fixed_income_bootstrap_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BootstrapRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BootstrapResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/fixed-income/bond-price": {
+      "post": {
+        "tags": [
+          "Fixed Income & Yield Curves"
+        ],
+        "summary": "Price Bond Endpoint",
+        "description": "Compute clean/dirty bond price, YTM (Brent root-finder), Macaulay/Modified duration, Convexity, and DV01.",
+        "operationId": "price_bond_endpoint_v1_fixed_income_bond_price_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BondPriceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BondPriceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/fixed-income/curve-shock": {
+      "post": {
+        "tags": [
+          "Fixed Income & Yield Curves"
+        ],
+        "summary": "Apply Curve Shock Endpoint",
+        "description": "Simulate macro yield curve shock scenarios: parallel, steepener, flattener, and butterfly twist.",
+        "operationId": "apply_curve_shock_endpoint_v1_fixed_income_curve_shock_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurveShockRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurveShockResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/fixed-income/key-rate-duration": {
+      "post": {
+        "tags": [
+          "Fixed Income & Yield Curves"
+        ],
+        "summary": "Compute Krd Endpoint",
+        "description": "Compute Key-Rate Duration (KRD) profile across benchmark curve tenors.",
+        "operationId": "compute_krd_endpoint_v1_fixed_income_key_rate_duration_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KRDRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KRDResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/fixed-income/models/vasicek": {
+      "post": {
+        "tags": [
+          "Fixed Income & Yield Curves"
+        ],
+        "summary": "Price Vasicek Endpoint",
+        "description": "Analytical zero-coupon bond pricing under the Vasicek short-rate model.",
+        "operationId": "price_vasicek_endpoint_v1_fixed_income_models_vasicek_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VasicekRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VasicekResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/fixed-income/models/cir": {
+      "post": {
+        "tags": [
+          "Fixed Income & Yield Curves"
+        ],
+        "summary": "Price Cir Endpoint",
+        "description": "Analytical zero-coupon bond pricing under the Cox-Ingersoll-Ross (CIR) square-root diffusion model.",
+        "operationId": "price_cir_endpoint_v1_fixed_income_models_cir_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CIRRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CIRResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/fixed-income/models/hull-white": {
+      "post": {
+        "tags": [
+          "Fixed Income & Yield Curves"
+        ],
+        "summary": "Price Hull White Endpoint",
+        "description": "Analytical zero-coupon bond pricing under the 1-Factor Hull-White short-rate model.",
+        "operationId": "price_hull_white_endpoint_v1_fixed_income_models_hull_white_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HullWhiteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HullWhiteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/hrp": {
+      "post": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Optimize Hrp",
+        "description": "Compute Hierarchical Risk Parity weights with covariance shrinkage, constraints, and turnover.",
+        "operationId": "optimize_hrp_v1_portfolio_hrp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HRPRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HRPResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/hrp/backtest": {
+      "post": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Backtest Hrp",
+        "description": "Walk-forward rolling out-of-sample backtest of HRP portfolio allocation.",
+        "operationId": "backtest_hrp_v1_portfolio_hrp_backtest_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HRPBacktestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HRPBacktestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/mean-variance": {
+      "post": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Optimize Mean Variance Endpoint",
+        "description": "Compute Mean-Variance portfolio weights (Max Sharpe, Min Variance, Target Return, Target Risk).",
+        "operationId": "optimize_mean_variance_endpoint_v1_portfolio_mean_variance_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MeanVarianceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeanVarianceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/risk-parity": {
+      "post": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Optimize Risk Parity Endpoint",
+        "description": "Equal Risk Contribution (ERC) portfolio optimization equalizing marginal risk contributions.",
+        "operationId": "optimize_risk_parity_endpoint_v1_portfolio_risk_parity_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiskParityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskParityResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/black-litterman": {
+      "post": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Black Litterman Endpoint",
+        "description": "Compute Black-Litterman implied equilibrium returns, posterior returns, and posterior covariance.",
+        "operationId": "black_litterman_endpoint_v1_portfolio_black_litterman_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlackLittermanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlackLittermanResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/cvar-optimization": {
+      "post": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Optimize Cvar Endpoint",
+        "description": "Rockafellar-Uryasev Linear Programming CVaR / Expected Shortfall portfolio optimization.",
+        "operationId": "optimize_cvar_endpoint_v1_portfolio_cvar_optimization_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CVaROptimizationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CVaROptimizationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/attribution": {
+      "post": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Brinson Attribution Endpoint",
+        "description": "Brinson-Fachler performance attribution (allocation, selection, interaction effects).",
+        "operationId": "brinson_attribution_endpoint_v1_portfolio_attribution_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrinsonAttributionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrinsonAttributionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/metrics": {
+      "post": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Compute Metrics Endpoint",
+        "description": "Compute portfolio risk-adjusted metrics (Sharpe, Sortino, Calmar, Max Drawdown, Ulcer, Tracking Error).",
+        "operationId": "compute_metrics_endpoint_v1_portfolio_metrics_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PortfolioMetricsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioMetricsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/risk/evt-cvar": {
+      "post": {
+        "tags": [
+          "Risk & Macro"
+        ],
+        "summary": "Compute Evt Cvar",
+        "description": "Compute tail-risk VaR and Expected Shortfall via Extreme Value Theory (GPD/POT).\n\nFits a Generalized Pareto Distribution to tail losses with Kolmogorov-Smirnov goodness of fit,\nQQ-plot coordinates, Mean Excess diagnostics, and 95% asymptotic confidence intervals.",
+        "operationId": "compute_evt_cvar_v1_risk_evt_cvar_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EVTRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EVTResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/risk/var-suite": {
+      "post": {
+        "tags": [
+          "Risk & Macro"
+        ],
+        "summary": "Compute Var Suite Endpoint",
+        "description": "Compute VaR and CVaR across Historical, Parametric Normal, Student-t, and Cornish-Fisher models.",
+        "operationId": "compute_var_suite_endpoint_v1_risk_var_suite_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MultiModelVaRRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MultiModelVaRResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/risk/garch": {
+      "post": {
+        "tags": [
+          "Risk & Macro"
+        ],
+        "summary": "Fit Garch Endpoint",
+        "description": "Fit GARCH(1,1) conditional volatility model via Quasi-Maximum Likelihood (QMLE).",
+        "operationId": "fit_garch_endpoint_v1_risk_garch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GARCHRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GARCHResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/risk/ewma": {
+      "post": {
+        "tags": [
+          "Risk & Macro"
+        ],
+        "summary": "Compute Ewma Endpoint",
+        "description": "Compute RiskMetrics EWMA volatility path.",
+        "operationId": "compute_ewma_endpoint_v1_risk_ewma_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EWMARequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EWMAResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/risk/factor-model": {
+      "post": {
+        "tags": [
+          "Risk & Macro"
+        ],
+        "summary": "Factor Model Endpoint",
+        "description": "Decompose asset returns into systematic factor exposures and idiosyncratic risk.",
+        "operationId": "factor_model_endpoint_v1_risk_factor_model_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FactorModelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FactorModelResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/risk/stress-test": {
+      "post": {
+        "tags": [
+          "Risk & Macro"
+        ],
+        "summary": "Stress Test Endpoint",
+        "description": "Evaluate portfolio P&L under historical and macro stress shock scenarios.",
+        "operationId": "stress_test_endpoint_v1_risk_stress_test_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StressTestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StressTestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/risk/var-backtest": {
+      "post": {
+        "tags": [
+          "Risk & Macro"
+        ],
+        "summary": "Var Backtest Endpoint",
+        "description": "Backtest VaR predictions using Kupiec POF, Christoffersen Independence, and Basel Traffic Light rules.",
+        "operationId": "var_backtest_endpoint_v1_risk_var_backtest_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VaRBacktestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VaRBacktestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/macro/nelson-siegel": {
+      "post": {
+        "tags": [
+          "Risk & Macro"
+        ],
+        "summary": "Fit Yield Curve",
+        "description": "Fit the Nelson-Siegel parametric yield curve to observed market yields.",
+        "operationId": "fit_yield_curve_v1_macro_nelson_siegel_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NelsonSiegelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NelsonSiegelResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Health Check",
+        "description": "Health check endpoint verifying microservice status and active version.",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Check Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AsianOptionRequest": {
+        "properties": {
+          "S": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "S"
+          },
+          "K": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "K"
+          },
+          "T": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "T"
+          },
+          "r": {
+            "type": "number",
+            "title": "R"
+          },
+          "sigma": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Sigma"
+          },
+          "option_type": {
+            "type": "string",
+            "enum": [
+              "call",
+              "put"
+            ],
+            "title": "Option Type",
+            "default": "call"
+          },
+          "averaging_type": {
+            "type": "string",
+            "enum": [
+              "geometric",
+              "arithmetic"
+            ],
+            "title": "Averaging Type",
+            "default": "arithmetic"
+          },
+          "q": {
+            "type": "number",
+            "title": "Q",
+            "default": 0.0
+          },
+          "n_obs": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 2.0,
+            "title": "N Obs",
+            "default": 252
+          }
+        },
+        "type": "object",
+        "required": [
+          "S",
+          "K",
+          "T",
+          "r",
+          "sigma"
+        ],
+        "title": "AsianOptionRequest"
+      },
+      "AsianOptionResponse": {
+        "properties": {
+          "price": {
+            "type": "number",
+            "title": "Price"
+          },
+          "averaging_type": {
+            "type": "string",
+            "title": "Averaging Type"
+          },
+          "option_type": {
+            "type": "string",
+            "title": "Option Type"
+          },
+          "sigma_adj": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sigma Adj"
+          },
+          "expected_average": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Average"
+          },
+          "implied_vol_avg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Implied Vol Avg"
+          }
+        },
+        "type": "object",
+        "required": [
+          "price",
+          "averaging_type",
+          "option_type"
+        ],
+        "title": "AsianOptionResponse"
+      },
+      "BSMRequest": {
+        "properties": {
+          "S": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "S",
+            "description": "Spot price of underlying asset (currency units, e.g. 100.0)"
+          },
+          "K": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "K",
+            "description": "Strike price (currency units, e.g. 100.0)"
+          },
+          "T": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "T",
+            "description": "Time to expiration in years (e.g. 1.0 for 1 year)"
+          },
+          "r": {
+            "type": "number",
+            "title": "R",
+            "description": "Risk-free interest rate as annualized decimal (e.g. 0.05 for 5%)"
+          },
+          "sigma": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Sigma",
+            "description": "Annualized volatility as decimal (e.g. 0.20 for 20%)"
+          },
+          "option_type": {
+            "type": "string",
+            "enum": [
+              "call",
+              "put"
+            ],
+            "title": "Option Type",
+            "description": "Option type",
+            "default": "call"
+          },
+          "q": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Q",
+            "description": "Continuous dividend yield as decimal (e.g. 0.02 for 2%)",
+            "default": 0.0
+          },
+          "validate_greeks": {
+            "type": "boolean",
+            "title": "Validate Greeks",
+            "description": "Validate analytical Greeks against finite differences",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "S",
+          "K",
+          "T",
+          "r",
+          "sigma"
+        ],
+        "title": "BSMRequest",
+        "description": "Input parameters for generalized Black-Scholes-Merton option pricing."
+      },
+      "BSMResponse": {
+        "properties": {
+          "price": {
+            "type": "number",
+            "title": "Price",
+            "description": "Analytical option price"
+          },
+          "delta": {
+            "type": "number",
+            "title": "Delta",
+            "description": "Delta (dV/dS)"
+          },
+          "gamma": {
+            "type": "number",
+            "title": "Gamma",
+            "description": "Gamma (d2V/dS2)"
+          },
+          "vega": {
+            "type": "number",
+            "title": "Vega",
+            "description": "Vega (dV/dSigma)"
+          },
+          "theta": {
+            "type": "number",
+            "title": "Theta",
+            "description": "Theta (-dV/dT annualized)"
+          },
+          "rho": {
+            "type": "number",
+            "title": "Rho",
+            "description": "Rho (dV/dr)"
+          },
+          "vanna": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vanna",
+            "description": "Vanna (dVega/dS)"
+          },
+          "volga": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volga",
+            "description": "Volga / Vomma (dVega/dSigma)"
+          },
+          "charm": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Charm",
+            "description": "Charm / Delta decay (-dDelta/dT)"
+          },
+          "veta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Veta",
+            "description": "Veta (-dVega/dT)"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color",
+            "description": "Color (dGamma/dT)"
+          },
+          "speed": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speed",
+            "description": "Speed (dGamma/dS)"
+          },
+          "ultima": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ultima",
+            "description": "Ultima (dVolga/dSigma)"
+          },
+          "d1": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "D1"
+          },
+          "d2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "D2"
+          },
+          "no_arbitrage_bounds": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NoArbitrageBounds"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "greeks_validation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GreeksValidationReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "price",
+          "delta",
+          "gamma",
+          "vega",
+          "theta",
+          "rho"
+        ],
+        "title": "BSMResponse",
+        "description": "Output for generalized Black-Scholes-Merton pricing with first- and higher-order Greeks."
+      },
+      "BarrierOptionRequest": {
+        "properties": {
+          "S": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "S"
+          },
+          "K": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "K"
+          },
+          "H": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "H",
+            "description": "Barrier level"
+          },
+          "T": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "T"
+          },
+          "r": {
+            "type": "number",
+            "title": "R"
+          },
+          "sigma": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Sigma"
+          },
+          "barrier_type": {
+            "type": "string",
+            "enum": [
+              "up_and_out",
+              "up_and_in",
+              "down_and_out",
+              "down_and_in"
+            ],
+            "title": "Barrier Type"
+          },
+          "option_type": {
+            "type": "string",
+            "enum": [
+              "call",
+              "put"
+            ],
+            "title": "Option Type",
+            "default": "call"
+          },
+          "q": {
+            "type": "number",
+            "title": "Q",
+            "default": 0.0
+          },
+          "rebate": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Rebate",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "S",
+          "K",
+          "H",
+          "T",
+          "r",
+          "sigma",
+          "barrier_type"
+        ],
+        "title": "BarrierOptionRequest"
+      },
+      "BarrierOptionResponse": {
+        "properties": {
+          "price": {
+            "type": "number",
+            "title": "Price"
+          },
+          "barrier_type": {
+            "type": "string",
+            "title": "Barrier Type"
+          },
+          "option_type": {
+            "type": "string",
+            "title": "Option Type"
+          },
+          "barrier_level": {
+            "type": "number",
+            "title": "Barrier Level"
+          },
+          "rebate": {
+            "type": "number",
+            "title": "Rebate"
+          },
+          "breached_at_start": {
+            "type": "boolean",
+            "title": "Breached At Start"
+          }
+        },
+        "type": "object",
+        "required": [
+          "price",
+          "barrier_type",
+          "option_type",
+          "barrier_level",
+          "rebate",
+          "breached_at_start"
+        ],
+        "title": "BarrierOptionResponse"
+      },
+      "BinaryOptionRequest": {
+        "properties": {
+          "S": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "S"
+          },
+          "K": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "K"
+          },
+          "T": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "T"
+          },
+          "r": {
+            "type": "number",
+            "title": "R"
+          },
+          "sigma": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Sigma"
+          },
+          "payoff_type": {
+            "type": "string",
+            "enum": [
+              "cash_or_nothing",
+              "asset_or_nothing"
+            ],
+            "title": "Payoff Type",
+            "default": "cash_or_nothing"
+          },
+          "option_type": {
+            "type": "string",
+            "enum": [
+              "call",
+              "put"
+            ],
+            "title": "Option Type",
+            "default": "call"
+          },
+          "cash_amount": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Cash Amount",
+            "default": 1.0
+          },
+          "q": {
+            "type": "number",
+            "title": "Q",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "S",
+          "K",
+          "T",
+          "r",
+          "sigma"
+        ],
+        "title": "BinaryOptionRequest"
+      },
+      "BinaryOptionResponse": {
+        "properties": {
+          "price": {
+            "type": "number",
+            "title": "Price"
+          },
+          "delta": {
+            "type": "number",
+            "title": "Delta"
+          },
+          "payoff_type": {
+            "type": "string",
+            "title": "Payoff Type"
+          },
+          "option_type": {
+            "type": "string",
+            "title": "Option Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "price",
+          "delta",
+          "payoff_type",
+          "option_type"
+        ],
+        "title": "BinaryOptionResponse"
+      },
+      "BlackLittermanRequest": {
+        "properties": {
+          "market_weights": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Market Weights"
+          },
+          "cov_matrix": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Cov Matrix"
+          },
+          "risk_aversion": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Risk Aversion",
+            "default": 2.5
+          },
+          "tau": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Tau",
+            "default": 0.05
+          },
+          "pick_matrix_P": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {
+                    "type": "number"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pick Matrix P"
+          },
+          "view_returns_Q": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "View Returns Q"
+          },
+          "omega_uncertainty": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {
+                    "type": "number"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Omega Uncertainty"
+          },
+          "asset_names": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset Names"
+          }
+        },
+        "type": "object",
+        "required": [
+          "market_weights",
+          "cov_matrix"
+        ],
+        "title": "BlackLittermanRequest"
+      },
+      "BlackLittermanResponse": {
+        "properties": {
+          "prior_returns": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Prior Returns"
+          },
+          "posterior_returns": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Posterior Returns"
+          },
+          "posterior_weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Posterior Weights"
+          },
+          "prior_weights": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prior Weights"
+          }
+        },
+        "type": "object",
+        "required": [
+          "prior_returns",
+          "posterior_returns",
+          "posterior_weights"
+        ],
+        "title": "BlackLittermanResponse"
+      },
+      "BondPriceRequest": {
+        "properties": {
+          "coupon_rate": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Coupon Rate",
+            "description": "Annual coupon rate as decimal (e.g. 0.05 for 5%)"
+          },
+          "maturity": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Maturity",
+            "description": "Maturity in years"
+          },
+          "ytm": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ytm",
+            "description": "Annualized YTM as decimal"
+          },
+          "clean_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clean Price",
+            "description": "Clean price (if solving for YTM)"
+          },
+          "face_value": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Face Value",
+            "default": 100.0
+          },
+          "frequency": {
+            "type": "integer",
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "Frequency",
+            "default": 2
+          },
+          "accrual_fraction": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Accrual Fraction",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "coupon_rate",
+          "maturity"
+        ],
+        "title": "BondPriceRequest"
+      },
+      "BondPriceResponse": {
+        "properties": {
+          "clean_price": {
+            "type": "number",
+            "title": "Clean Price"
+          },
+          "dirty_price": {
+            "type": "number",
+            "title": "Dirty Price"
+          },
+          "accrued_interest": {
+            "type": "number",
+            "title": "Accrued Interest"
+          },
+          "ytm": {
+            "type": "number",
+            "title": "Ytm"
+          },
+          "macaulay_duration": {
+            "type": "number",
+            "title": "Macaulay Duration"
+          },
+          "modified_duration": {
+            "type": "number",
+            "title": "Modified Duration"
+          },
+          "convexity": {
+            "type": "number",
+            "title": "Convexity"
+          },
+          "dv01": {
+            "type": "number",
+            "title": "Dv01"
+          },
+          "pv01": {
+            "type": "number",
+            "title": "Pv01"
+          }
+        },
+        "type": "object",
+        "required": [
+          "clean_price",
+          "dirty_price",
+          "accrued_interest",
+          "ytm",
+          "macaulay_duration",
+          "modified_duration",
+          "convexity",
+          "dv01",
+          "pv01"
+        ],
+        "title": "BondPriceResponse"
+      },
+      "BootstrapInstrument": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "deposit",
+              "money_market",
+              "future",
+              "fra",
+              "swap"
+            ],
+            "title": "Type"
+          },
+          "tenor": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Tenor"
+          },
+          "rate": {
+            "type": "number",
+            "title": "Rate",
+            "description": "Annualized quote as decimal"
+          },
+          "freq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freq",
+            "description": "Payment frequency per year for swaps",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "tenor",
+          "rate"
+        ],
+        "title": "BootstrapInstrument"
+      },
+      "BootstrapRequest": {
+        "properties": {
+          "instruments": {
+            "items": {
+              "$ref": "#/components/schemas/BootstrapInstrument"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Instruments"
+          }
+        },
+        "type": "object",
+        "required": [
+          "instruments"
+        ],
+        "title": "BootstrapRequest"
+      },
+      "BootstrapResponse": {
+        "properties": {
+          "tenors": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Tenors"
+          },
+          "discount_factors": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Discount Factors"
+          },
+          "zero_rates": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Zero Rates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenors",
+          "discount_factors",
+          "zero_rates"
+        ],
+        "title": "BootstrapResponse"
+      },
+      "BrinsonAttributionRequest": {
+        "properties": {
+          "portfolio_weights": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Portfolio Weights"
+          },
+          "benchmark_weights": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Benchmark Weights"
+          },
+          "portfolio_returns": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Portfolio Returns"
+          },
+          "benchmark_returns": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Benchmark Returns"
+          },
+          "sector_names": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sector Names"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolio_weights",
+          "benchmark_weights",
+          "portfolio_returns",
+          "benchmark_returns"
+        ],
+        "title": "BrinsonAttributionRequest"
+      },
+      "BrinsonAttributionResponse": {
+        "properties": {
+          "portfolio_total_return": {
+            "type": "number",
+            "title": "Portfolio Total Return"
+          },
+          "benchmark_total_return": {
+            "type": "number",
+            "title": "Benchmark Total Return"
+          },
+          "total_excess_return": {
+            "type": "number",
+            "title": "Total Excess Return"
+          },
+          "total_allocation": {
+            "type": "number",
+            "title": "Total Allocation"
+          },
+          "total_selection": {
+            "type": "number",
+            "title": "Total Selection"
+          },
+          "total_interaction": {
+            "type": "number",
+            "title": "Total Interaction"
+          },
+          "sectors": {
+            "items": {
+              "$ref": "#/components/schemas/SectorAttributionItem"
+            },
+            "type": "array",
+            "title": "Sectors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolio_total_return",
+          "benchmark_total_return",
+          "total_excess_return",
+          "total_allocation",
+          "total_selection",
+          "total_interaction",
+          "sectors"
+        ],
+        "title": "BrinsonAttributionResponse"
+      },
+      "CIRRequest": {
+        "properties": {
+          "r0": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "R0"
+          },
+          "T": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "T"
+          },
+          "a": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "A"
+          },
+          "b": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "B"
+          },
+          "sigma": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Sigma"
+          }
+        },
+        "type": "object",
+        "required": [
+          "r0",
+          "T",
+          "a",
+          "b",
+          "sigma"
+        ],
+        "title": "CIRRequest"
+      },
+      "CIRResponse": {
+        "properties": {
+          "price": {
+            "type": "number",
+            "title": "Price"
+          },
+          "yield": {
+            "type": "number",
+            "title": "Yield"
+          },
+          "A": {
+            "type": "number",
+            "title": "A"
+          },
+          "B": {
+            "type": "number",
+            "title": "B"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "default": "cir"
+          }
+        },
+        "type": "object",
+        "required": [
+          "price",
+          "yield",
+          "A",
+          "B"
+        ],
+        "title": "CIRResponse"
+      },
+      "CVaROptimizationRequest": {
+        "properties": {
+          "scenario_returns": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "minItems": 10,
+            "title": "Scenario Returns",
+            "description": "T scenarios x N assets"
+          },
+          "confidence_level": {
+            "type": "number",
+            "exclusiveMaximum": 1.0,
+            "exclusiveMinimum": 0.5,
+            "title": "Confidence Level",
+            "default": 0.95
+          },
+          "min_weight": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Min Weight",
+            "default": 0.0
+          },
+          "max_weight": {
+            "type": "number",
+            "maximum": 1.0,
+            "title": "Max Weight",
+            "default": 1.0
+          },
+          "asset_names": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset Names"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenario_returns"
+        ],
+        "title": "CVaROptimizationRequest"
+      },
+      "CVaROptimizationResponse": {
+        "properties": {
+          "weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Weights"
+          },
+          "var": {
+            "type": "number",
+            "title": "Var"
+          },
+          "cvar": {
+            "type": "number",
+            "title": "Cvar"
+          },
+          "confidence_level": {
+            "type": "number",
+            "title": "Confidence Level"
+          },
+          "converged": {
+            "type": "boolean",
+            "title": "Converged"
+          }
+        },
+        "type": "object",
+        "required": [
+          "weights",
+          "var",
+          "cvar",
+          "confidence_level",
+          "converged"
+        ],
+        "title": "CVaROptimizationResponse"
+      },
+      "CalendarArbitrageRequest": {
+        "properties": {
+          "expiries": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Expiries"
+          },
+          "svi_slices": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Svi Slices"
+          }
+        },
+        "type": "object",
+        "required": [
+          "expiries",
+          "svi_slices"
+        ],
+        "title": "CalendarArbitrageRequest"
+      },
+      "CalendarArbitrageResponse": {
+        "properties": {
+          "calendar_arbitrage_free": {
+            "type": "boolean",
+            "title": "Calendar Arbitrage Free"
+          },
+          "num_slice_violations": {
+            "type": "integer",
+            "title": "Num Slice Violations"
+          },
+          "max_variance_drop": {
+            "type": "number",
+            "title": "Max Variance Drop"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "calendar_arbitrage_free",
+          "num_slice_violations",
+          "max_variance_drop"
+        ],
+        "title": "CalendarArbitrageResponse"
+      },
+      "CurveShockRequest": {
+        "properties": {
+          "tenors": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Tenors"
+          },
+          "yields": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Yields"
+          },
+          "scenario": {
+            "type": "string",
+            "enum": [
+              "parallel",
+              "steepener",
+              "flattener",
+              "twist",
+              "custom"
+            ],
+            "title": "Scenario"
+          },
+          "shift_bps": {
+            "type": "number",
+            "title": "Shift Bps",
+            "default": 25.0
+          },
+          "custom_shifts_bps": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Shifts Bps"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenors",
+          "yields",
+          "scenario"
+        ],
+        "title": "CurveShockRequest"
+      },
+      "CurveShockResponse": {
+        "properties": {
+          "scenario": {
+            "type": "string",
+            "title": "Scenario"
+          },
+          "original_yields": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Original Yields"
+          },
+          "shifted_yields": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Shifted Yields"
+          },
+          "delta_bps": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Delta Bps"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenario",
+          "original_yields",
+          "shifted_yields",
+          "delta_bps"
+        ],
+        "title": "CurveShockResponse"
+      },
+      "CurveSuiteRequest": {
+        "properties": {
+          "tenors": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Tenors"
+          },
+          "spot_rates": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Spot Rates",
+            "description": "Annualized spot rates as decimals (e.g. 0.045)"
+          },
+          "rate_convention": {
+            "type": "string",
+            "enum": [
+              "continuous",
+              "annual_compounded",
+              "semi_annual"
+            ],
+            "title": "Rate Convention",
+            "default": "continuous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenors",
+          "spot_rates"
+        ],
+        "title": "CurveSuiteRequest"
+      },
+      "CurveSuiteResponse": {
+        "properties": {
+          "tenors": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Tenors"
+          },
+          "spot_rates": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Spot Rates"
+          },
+          "discount_factors": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Discount Factors"
+          },
+          "forward_rates": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Forward Rates"
+          },
+          "par_yields": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Par Yields"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenors",
+          "spot_rates",
+          "discount_factors",
+          "forward_rates",
+          "par_yields"
+        ],
+        "title": "CurveSuiteResponse"
+      },
+      "EVTRequest": {
+        "properties": {
+          "returns": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 50,
+            "title": "Returns",
+            "description": "Historical return series (>= 50 observations)"
+          },
+          "confidence_level": {
+            "type": "number",
+            "exclusiveMaximum": 1.0,
+            "exclusiveMinimum": 0.5,
+            "title": "Confidence Level",
+            "description": "VaR/CVaR confidence level",
+            "default": 0.99
+          },
+          "threshold_quantile": {
+            "type": "number",
+            "exclusiveMaximum": 1.0,
+            "exclusiveMinimum": 0.5,
+            "title": "Threshold Quantile",
+            "description": "POT threshold quantile",
+            "default": 0.95
+          },
+          "include_diagnostics": {
+            "type": "boolean",
+            "title": "Include Diagnostics",
+            "description": "Include Mean Excess Plot and stability scan",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "returns"
+        ],
+        "title": "EVTRequest",
+        "description": "Input for EVT Peaks-Over-Threshold analysis."
+      },
+      "EVTResponse": {
+        "properties": {
+          "gpd_params": {
+            "$ref": "#/components/schemas/GPDParams"
+          },
+          "var": {
+            "type": "number",
+            "title": "Var",
+            "description": "Value-at-Risk"
+          },
+          "cvar": {
+            "type": "number",
+            "title": "Cvar",
+            "description": "Conditional VaR / Expected Shortfall"
+          },
+          "confidence_level": {
+            "type": "number",
+            "title": "Confidence Level"
+          },
+          "var_ci_95_lower": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Var Ci 95 Lower"
+          },
+          "var_ci_95_upper": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Var Ci 95 Upper"
+          },
+          "threshold_diagnostics": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Threshold Diagnostics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "gpd_params",
+          "var",
+          "cvar",
+          "confidence_level"
+        ],
+        "title": "EVTResponse"
+      },
+      "EWMARequest": {
+        "properties": {
+          "returns": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 20,
+            "title": "Returns"
+          },
+          "decay": {
+            "type": "number",
+            "exclusiveMaximum": 1.0,
+            "exclusiveMinimum": 0.5,
+            "title": "Decay",
+            "default": 0.94
+          }
+        },
+        "type": "object",
+        "required": [
+          "returns"
+        ],
+        "title": "EWMARequest"
+      },
+      "EWMAResponse": {
+        "properties": {
+          "decay_lambda": {
+            "type": "number",
+            "title": "Decay Lambda"
+          },
+          "current_annualized_vol": {
+            "type": "number",
+            "title": "Current Annualized Vol"
+          },
+          "volatility_path": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Volatility Path"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decay_lambda",
+          "current_annualized_vol",
+          "volatility_path"
+        ],
+        "title": "EWMAResponse"
+      },
+      "FactorModelRequest": {
+        "properties": {
+          "asset_returns": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 20,
+            "title": "Asset Returns"
+          },
+          "factor_returns": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "minItems": 20,
+            "title": "Factor Returns"
+          },
+          "factor_names": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Factor Names"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_returns",
+          "factor_returns"
+        ],
+        "title": "FactorModelRequest"
+      },
+      "FactorModelResponse": {
+        "properties": {
+          "alpha": {
+            "type": "number",
+            "title": "Alpha"
+          },
+          "factor_betas": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Factor Betas"
+          },
+          "r_squared": {
+            "type": "number",
+            "title": "R Squared"
+          },
+          "systematic_variance_pct": {
+            "type": "number",
+            "title": "Systematic Variance Pct"
+          },
+          "idiosyncratic_variance_pct": {
+            "type": "number",
+            "title": "Idiosyncratic Variance Pct"
+          },
+          "total_annualized_vol": {
+            "type": "number",
+            "title": "Total Annualized Vol"
+          },
+          "idiosyncratic_annualized_vol": {
+            "type": "number",
+            "title": "Idiosyncratic Annualized Vol"
+          }
+        },
+        "type": "object",
+        "required": [
+          "alpha",
+          "factor_betas",
+          "r_squared",
+          "systematic_variance_pct",
+          "idiosyncratic_variance_pct",
+          "total_annualized_vol",
+          "idiosyncratic_annualized_vol"
+        ],
+        "title": "FactorModelResponse"
+      },
+      "GARCHRequest": {
+        "properties": {
+          "returns": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 50,
+            "title": "Returns"
+          }
+        },
+        "type": "object",
+        "required": [
+          "returns"
+        ],
+        "title": "GARCHRequest"
+      },
+      "GARCHResponse": {
+        "properties": {
+          "omega": {
+            "type": "number",
+            "title": "Omega"
+          },
+          "alpha": {
+            "type": "number",
+            "title": "Alpha"
+          },
+          "beta": {
+            "type": "number",
+            "title": "Beta"
+          },
+          "persistence": {
+            "type": "number",
+            "title": "Persistence"
+          },
+          "is_stationary": {
+            "type": "boolean",
+            "title": "Is Stationary"
+          },
+          "current_annualized_vol": {
+            "type": "number",
+            "title": "Current Annualized Vol"
+          },
+          "long_run_annualized_vol": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Long Run Annualized Vol"
+          },
+          "converged": {
+            "type": "boolean",
+            "title": "Converged"
+          }
+        },
+        "type": "object",
+        "required": [
+          "omega",
+          "alpha",
+          "beta",
+          "persistence",
+          "is_stationary",
+          "current_annualized_vol",
+          "converged"
+        ],
+        "title": "GARCHResponse"
+      },
+      "GPDParams": {
+        "properties": {
+          "xi": {
+            "type": "number",
+            "title": "Xi",
+            "description": "Shape parameter (xi)"
+          },
+          "beta": {
+            "type": "number",
+            "title": "Beta",
+            "description": "Scale parameter (beta)"
+          },
+          "threshold": {
+            "type": "number",
+            "title": "Threshold",
+            "description": "Threshold value u"
+          },
+          "n_exceedances": {
+            "type": "integer",
+            "title": "N Exceedances"
+          },
+          "n_total": {
+            "type": "integer",
+            "title": "N Total"
+          },
+          "ks_statistic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ks Statistic"
+          },
+          "ks_p_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ks P Value"
+          },
+          "fit_accepted": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fit Accepted"
+          },
+          "qq_plot": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "type": "number"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qq Plot"
+          }
+        },
+        "type": "object",
+        "required": [
+          "xi",
+          "beta",
+          "threshold",
+          "n_exceedances",
+          "n_total"
+        ],
+        "title": "GPDParams"
+      },
+      "GreekValidationItem": {
+        "properties": {
+          "analytical": {
+            "type": "number",
+            "title": "Analytical"
+          },
+          "numerical": {
+            "type": "number",
+            "title": "Numerical"
+          },
+          "rel_error": {
+            "type": "number",
+            "title": "Rel Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "analytical",
+          "numerical",
+          "rel_error"
+        ],
+        "title": "GreekValidationItem"
+      },
+      "GreeksValidationReport": {
+        "properties": {
+          "all_passed": {
+            "type": "boolean",
+            "title": "All Passed"
+          },
+          "max_rel_error": {
+            "type": "number",
+            "title": "Max Rel Error"
+          },
+          "checks": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/GreekValidationItem"
+            },
+            "type": "object",
+            "title": "Checks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "all_passed",
+          "max_rel_error",
+          "checks"
+        ],
+        "title": "GreeksValidationReport"
+      },
+      "HRPBacktestRequest": {
+        "properties": {
+          "returns": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "minItems": 60,
+            "title": "Returns"
+          },
+          "train_window": {
+            "type": "integer",
+            "minimum": 30.0,
+            "title": "Train Window",
+            "default": 120
+          },
+          "rebalance_freq": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Rebalance Freq",
+            "default": 20
+          },
+          "asset_names": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset Names"
+          },
+          "cov_estimator": {
+            "type": "string",
+            "enum": [
+              "ledoit_wolf",
+              "sample",
+              "ewma"
+            ],
+            "title": "Cov Estimator",
+            "default": "ledoit_wolf"
+          }
+        },
+        "type": "object",
+        "required": [
+          "returns"
+        ],
+        "title": "HRPBacktestRequest"
+      },
+      "HRPBacktestResponse": {
+        "properties": {
+          "out_of_sample_returns": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Out Of Sample Returns"
+          },
+          "metrics": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metrics"
+          },
+          "n_periods": {
+            "type": "integer",
+            "title": "N Periods"
+          }
+        },
+        "type": "object",
+        "required": [
+          "out_of_sample_returns",
+          "metrics",
+          "n_periods"
+        ],
+        "title": "HRPBacktestResponse"
+      },
+      "HRPRequest": {
+        "properties": {
+          "returns": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "minItems": 5,
+            "title": "Returns",
+            "description": "T x N return matrix"
+          },
+          "asset_names": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset Names",
+            "description": "Names for the N assets"
+          },
+          "cov_estimator": {
+            "type": "string",
+            "enum": [
+              "ledoit_wolf",
+              "sample",
+              "ewma",
+              "semi_covariance"
+            ],
+            "title": "Cov Estimator",
+            "default": "ledoit_wolf"
+          },
+          "missing_method": {
+            "type": "string",
+            "enum": [
+              "dropna",
+              "forward_fill",
+              "mean_impute"
+            ],
+            "title": "Missing Method",
+            "default": "dropna"
+          },
+          "min_weight": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Min Weight",
+            "default": 0.0
+          },
+          "max_weight": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Max Weight",
+            "default": 1.0
+          },
+          "prev_weights": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prev Weights"
+          },
+          "tx_cost_bps": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Tx Cost Bps",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "returns"
+        ],
+        "title": "HRPRequest"
+      },
+      "HRPResponse": {
+        "properties": {
+          "weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Weights"
+          },
+          "portfolio_variance": {
+            "type": "number",
+            "title": "Portfolio Variance"
+          },
+          "portfolio_volatility": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio Volatility"
+          },
+          "sharpe_ratio": {
+            "type": "number",
+            "title": "Sharpe Ratio"
+          },
+          "annualized_return": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annualized Return"
+          },
+          "turnover": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turnover"
+          },
+          "transaction_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transaction Cost"
+          },
+          "covariance_estimator": {
+            "type": "string",
+            "title": "Covariance Estimator"
+          },
+          "asset_order": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Asset Order"
+          }
+        },
+        "type": "object",
+        "required": [
+          "weights",
+          "portfolio_variance",
+          "sharpe_ratio",
+          "covariance_estimator",
+          "asset_order"
+        ],
+        "title": "HRPResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HestonCalibrationRequest": {
+        "properties": {
+          "market_data": {
+            "items": {
+              "$ref": "#/components/schemas/MarketQuote"
+            },
+            "type": "array",
+            "minItems": 5,
+            "title": "Market Data"
+          },
+          "S": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "S"
+          },
+          "r": {
+            "type": "number",
+            "title": "R"
+          },
+          "q": {
+            "type": "number",
+            "title": "Q",
+            "default": 0.0
+          },
+          "initial_guess": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Initial Guess"
+          }
+        },
+        "type": "object",
+        "required": [
+          "market_data",
+          "S",
+          "r"
+        ],
+        "title": "HestonCalibrationRequest"
+      },
+      "HestonCalibrationResponse": {
+        "properties": {
+          "v0": {
+            "type": "number",
+            "title": "V0"
+          },
+          "kappa": {
+            "type": "number",
+            "title": "Kappa"
+          },
+          "theta": {
+            "type": "number",
+            "title": "Theta"
+          },
+          "xi": {
+            "type": "number",
+            "title": "Xi"
+          },
+          "rho": {
+            "type": "number",
+            "title": "Rho"
+          },
+          "rmse": {
+            "type": "number",
+            "title": "Rmse"
+          },
+          "feller_satisfied": {
+            "type": "boolean",
+            "title": "Feller Satisfied"
+          },
+          "converged": {
+            "type": "boolean",
+            "title": "Converged"
+          },
+          "iterations": {
+            "type": "integer",
+            "title": "Iterations"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "v0",
+          "kappa",
+          "theta",
+          "xi",
+          "rho",
+          "rmse",
+          "feller_satisfied",
+          "converged",
+          "iterations"
+        ],
+        "title": "HestonCalibrationResponse"
+      },
+      "HestonRequest": {
+        "properties": {
+          "S": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "S",
+            "description": "Spot price"
+          },
+          "K": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "K",
+            "description": "Strike price"
+          },
+          "T": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "T",
+            "description": "Time to expiration in years"
+          },
+          "r": {
+            "type": "number",
+            "title": "R",
+            "description": "Annualized risk-free rate as decimal"
+          },
+          "v0": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "V0",
+            "description": "Initial instantaneous variance (e.g. 0.04)"
+          },
+          "kappa": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Kappa",
+            "description": "Mean-reversion rate (e.g. 1.5)"
+          },
+          "theta": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Theta",
+            "description": "Long-run variance (e.g. 0.04)"
+          },
+          "xi": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Xi",
+            "description": "Volatility of variance (e.g. 0.3)"
+          },
+          "rho": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": -1.0,
+            "title": "Rho",
+            "description": "Spot-variance correlation in [-1, 1]"
+          },
+          "option_type": {
+            "type": "string",
+            "enum": [
+              "call",
+              "put"
+            ],
+            "title": "Option Type",
+            "default": "call"
+          },
+          "q": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Q",
+            "description": "Continuous dividend yield",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "S",
+          "K",
+          "T",
+          "r",
+          "v0",
+          "kappa",
+          "theta",
+          "xi",
+          "rho"
+        ],
+        "title": "HestonRequest",
+        "description": "Input for Heston stochastic volatility pricing."
+      },
+      "HestonResponse": {
+        "properties": {
+          "price": {
+            "type": "number",
+            "title": "Price"
+          },
+          "implied_volatility": {
+            "type": "number",
+            "title": "Implied Volatility"
+          },
+          "quadrature_error": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quadrature Error"
+          },
+          "feller_satisfied": {
+            "type": "boolean",
+            "title": "Feller Satisfied"
+          },
+          "converged": {
+            "type": "boolean",
+            "title": "Converged",
+            "default": true
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "price",
+          "implied_volatility",
+          "feller_satisfied"
+        ],
+        "title": "HestonResponse",
+        "description": "Heston model option price and convergence diagnostics."
+      },
+      "HullWhiteRequest": {
+        "properties": {
+          "r0": {
+            "type": "number",
+            "title": "R0",
+            "description": "Current short rate"
+          },
+          "T": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "T"
+          },
+          "a": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "A",
+            "description": "Mean-reversion speed"
+          },
+          "sigma": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Sigma"
+          },
+          "initial_forward_rate": {
+            "type": "number",
+            "title": "Initial Forward Rate",
+            "default": 0.045
+          }
+        },
+        "type": "object",
+        "required": [
+          "r0",
+          "T",
+          "a",
+          "sigma"
+        ],
+        "title": "HullWhiteRequest"
+      },
+      "HullWhiteResponse": {
+        "properties": {
+          "price": {
+            "type": "number",
+            "title": "Price"
+          },
+          "yield": {
+            "type": "number",
+            "title": "Yield"
+          },
+          "B": {
+            "type": "number",
+            "title": "B"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "default": "hull_white_1f"
+          }
+        },
+        "type": "object",
+        "required": [
+          "price",
+          "yield",
+          "B"
+        ],
+        "title": "HullWhiteResponse"
+      },
+      "KRDRequest": {
+        "properties": {
+          "coupon_rate": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Coupon Rate"
+          },
+          "maturity": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Maturity"
+          },
+          "current_yield": {
+            "type": "number",
+            "title": "Current Yield",
+            "default": 0.045
+          },
+          "key_tenors": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key Tenors"
+          },
+          "face_value": {
+            "type": "number",
+            "title": "Face Value",
+            "default": 100.0
+          },
+          "frequency": {
+            "type": "integer",
+            "title": "Frequency",
+            "default": 2
+          }
+        },
+        "type": "object",
+        "required": [
+          "coupon_rate",
+          "maturity"
+        ],
+        "title": "KRDRequest"
+      },
+      "KRDResponse": {
+        "properties": {
+          "key_tenors": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Key Tenors"
+          },
+          "key_rate_durations": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Key Rate Durations"
+          },
+          "total_krd": {
+            "type": "number",
+            "title": "Total Krd"
+          },
+          "modified_duration": {
+            "type": "number",
+            "title": "Modified Duration"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key_tenors",
+          "key_rate_durations",
+          "total_krd",
+          "modified_duration"
+        ],
+        "title": "KRDResponse"
+      },
+      "MarketQuote": {
+        "properties": {
+          "K": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "K"
+          },
+          "T": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "T"
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Price"
+          },
+          "option_type": {
+            "type": "string",
+            "enum": [
+              "call",
+              "put"
+            ],
+            "title": "Option Type",
+            "default": "call"
+          }
+        },
+        "type": "object",
+        "required": [
+          "K",
+          "T",
+          "price"
+        ],
+        "title": "MarketQuote"
+      },
+      "MeanVarianceRequest": {
+        "properties": {
+          "expected_returns": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Expected Returns"
+          },
+          "cov_matrix": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Cov Matrix"
+          },
+          "objective": {
+            "type": "string",
+            "enum": [
+              "max_sharpe",
+              "min_variance",
+              "target_return",
+              "target_risk"
+            ],
+            "title": "Objective",
+            "default": "max_sharpe"
+          },
+          "target_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Value"
+          },
+          "risk_free_rate": {
+            "type": "number",
+            "title": "Risk Free Rate",
+            "default": 0.02
+          },
+          "min_weight": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Min Weight",
+            "default": 0.0
+          },
+          "max_weight": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Max Weight",
+            "default": 1.0
+          },
+          "allow_short": {
+            "type": "boolean",
+            "title": "Allow Short",
+            "default": false
+          },
+          "asset_names": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset Names"
+          },
+          "prev_weights": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prev Weights"
+          },
+          "max_turnover": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Turnover"
+          }
+        },
+        "type": "object",
+        "required": [
+          "expected_returns",
+          "cov_matrix"
+        ],
+        "title": "MeanVarianceRequest"
+      },
+      "MeanVarianceResponse": {
+        "properties": {
+          "weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Weights"
+          },
+          "expected_return": {
+            "type": "number",
+            "title": "Expected Return"
+          },
+          "volatility": {
+            "type": "number",
+            "title": "Volatility"
+          },
+          "sharpe_ratio": {
+            "type": "number",
+            "title": "Sharpe Ratio"
+          },
+          "converged": {
+            "type": "boolean",
+            "title": "Converged"
+          },
+          "objective": {
+            "type": "string",
+            "title": "Objective"
+          }
+        },
+        "type": "object",
+        "required": [
+          "weights",
+          "expected_return",
+          "volatility",
+          "sharpe_ratio",
+          "converged",
+          "objective"
+        ],
+        "title": "MeanVarianceResponse"
+      },
+      "MonteCarloRequest": {
+        "properties": {
+          "S": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "S"
+          },
+          "K": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "K"
+          },
+          "T": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "T"
+          },
+          "r": {
+            "type": "number",
+            "title": "R"
+          },
+          "sigma": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Sigma"
+          },
+          "option_type": {
+            "type": "string",
+            "enum": [
+              "call",
+              "put"
+            ],
+            "title": "Option Type",
+            "default": "call"
+          },
+          "payoff_style": {
+            "type": "string",
+            "enum": [
+              "european",
+              "asian_arithmetic",
+              "barrier_up_out",
+              "barrier_down_out"
+            ],
+            "title": "Payoff Style",
+            "default": "european"
+          },
+          "barrier_level": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barrier Level"
+          },
+          "q": {
+            "type": "number",
+            "title": "Q",
+            "default": 0.0
+          },
+          "n_paths": {
+            "type": "integer",
+            "maximum": 500000.0,
+            "minimum": 1000.0,
+            "title": "N Paths",
+            "default": 50000
+          },
+          "n_steps": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 10.0,
+            "title": "N Steps",
+            "default": 100
+          },
+          "use_antithetic": {
+            "type": "boolean",
+            "title": "Use Antithetic",
+            "default": true
+          },
+          "use_control_variate": {
+            "type": "boolean",
+            "title": "Use Control Variate",
+            "default": true
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed",
+            "default": 42
+          }
+        },
+        "type": "object",
+        "required": [
+          "S",
+          "K",
+          "T",
+          "r",
+          "sigma"
+        ],
+        "title": "MonteCarloRequest"
+      },
+      "MonteCarloResponse": {
+        "properties": {
+          "price": {
+            "type": "number",
+            "title": "Price"
+          },
+          "standard_error": {
+            "type": "number",
+            "title": "Standard Error"
+          },
+          "ci_95_lower": {
+            "type": "number",
+            "title": "Ci 95 Lower"
+          },
+          "ci_95_upper": {
+            "type": "number",
+            "title": "Ci 95 Upper"
+          },
+          "n_paths": {
+            "type": "integer",
+            "title": "N Paths"
+          },
+          "n_steps": {
+            "type": "integer",
+            "title": "N Steps"
+          },
+          "antithetic_used": {
+            "type": "boolean",
+            "title": "Antithetic Used"
+          },
+          "control_variate_used": {
+            "type": "boolean",
+            "title": "Control Variate Used"
+          },
+          "payoff_style": {
+            "type": "string",
+            "title": "Payoff Style"
+          }
+        },
+        "type": "object",
+        "required": [
+          "price",
+          "standard_error",
+          "ci_95_lower",
+          "ci_95_upper",
+          "n_paths",
+          "n_steps",
+          "antithetic_used",
+          "control_variate_used",
+          "payoff_style"
+        ],
+        "title": "MonteCarloResponse"
+      },
+      "MultiModelVaRRequest": {
+        "properties": {
+          "returns": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 30,
+            "title": "Returns"
+          },
+          "confidence_level": {
+            "type": "number",
+            "exclusiveMaximum": 1.0,
+            "exclusiveMinimum": 0.5,
+            "title": "Confidence Level",
+            "default": 0.99
+          },
+          "time_horizon_days": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Time Horizon Days",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "returns"
+        ],
+        "title": "MultiModelVaRRequest"
+      },
+      "MultiModelVaRResponse": {
+        "properties": {
+          "confidence_level": {
+            "type": "number",
+            "title": "Confidence Level"
+          },
+          "time_horizon_days": {
+            "type": "integer",
+            "title": "Time Horizon Days"
+          },
+          "sample_moments": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Sample Moments"
+          },
+          "models": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Models"
+          }
+        },
+        "type": "object",
+        "required": [
+          "confidence_level",
+          "time_horizon_days",
+          "sample_moments",
+          "models"
+        ],
+        "title": "MultiModelVaRResponse"
+      },
+      "NSSRequest": {
+        "properties": {
+          "tenors": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 6,
+            "title": "Tenors",
+            "description": "Maturity tenors in years (min 6)"
+          },
+          "yields": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 6,
+            "title": "Yields",
+            "description": "Observed market yields (min 6)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenors",
+          "yields"
+        ],
+        "title": "NSSRequest"
+      },
+      "NSSResponse": {
+        "properties": {
+          "beta_0": {
+            "type": "number",
+            "title": "Beta 0"
+          },
+          "beta_1": {
+            "type": "number",
+            "title": "Beta 1"
+          },
+          "beta_2": {
+            "type": "number",
+            "title": "Beta 2"
+          },
+          "beta_3": {
+            "type": "number",
+            "title": "Beta 3"
+          },
+          "lambda_1": {
+            "type": "number",
+            "title": "Lambda 1"
+          },
+          "lambda_2": {
+            "type": "number",
+            "title": "Lambda 2"
+          },
+          "fitted_yields": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Fitted Yields"
+          },
+          "rmse": {
+            "type": "number",
+            "title": "Rmse"
+          },
+          "converged": {
+            "type": "boolean",
+            "title": "Converged"
+          }
+        },
+        "type": "object",
+        "required": [
+          "beta_0",
+          "beta_1",
+          "beta_2",
+          "beta_3",
+          "lambda_1",
+          "lambda_2",
+          "fitted_yields",
+          "rmse",
+          "converged"
+        ],
+        "title": "NSSResponse"
+      },
+      "NelsonSiegelRequest": {
+        "properties": {
+          "tenors": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 4,
+            "title": "Tenors",
+            "description": "Maturity tenors in years"
+          },
+          "yields": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 4,
+            "title": "Yields",
+            "description": "Observed market yields"
+          },
+          "unit_convention": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "percent",
+              "decimal"
+            ],
+            "title": "Unit Convention",
+            "default": "auto"
+          },
+          "robust_loss": {
+            "type": "string",
+            "enum": [
+              "linear",
+              "huber",
+              "soft_l1"
+            ],
+            "title": "Robust Loss",
+            "default": "linear"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenors",
+          "yields"
+        ],
+        "title": "NelsonSiegelRequest"
+      },
+      "NelsonSiegelResponse": {
+        "properties": {
+          "beta_0": {
+            "type": "number",
+            "title": "Beta 0"
+          },
+          "beta_1": {
+            "type": "number",
+            "title": "Beta 1"
+          },
+          "beta_2": {
+            "type": "number",
+            "title": "Beta 2"
+          },
+          "lambda_param": {
+            "type": "number",
+            "title": "Lambda Param"
+          },
+          "fitted_yields": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Fitted Yields"
+          },
+          "residuals": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Residuals"
+          },
+          "rmse": {
+            "type": "number",
+            "title": "Rmse"
+          },
+          "mae": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mae"
+          },
+          "max_error": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Error"
+          },
+          "r_squared": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "R Squared"
+          },
+          "aic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aic"
+          },
+          "bic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bic"
+          },
+          "unit_convention": {
+            "type": "string",
+            "title": "Unit Convention"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "beta_0",
+          "beta_1",
+          "beta_2",
+          "lambda_param",
+          "fitted_yields",
+          "residuals",
+          "rmse",
+          "unit_convention"
+        ],
+        "title": "NelsonSiegelResponse"
+      },
+      "NoArbitrageBounds": {
+        "properties": {
+          "valid": {
+            "type": "boolean",
+            "title": "Valid"
+          },
+          "price": {
+            "type": "number",
+            "title": "Price"
+          },
+          "lower_bound": {
+            "type": "number",
+            "title": "Lower Bound"
+          },
+          "upper_bound": {
+            "type": "number",
+            "title": "Upper Bound"
+          },
+          "violation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Violation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "valid",
+          "price",
+          "lower_bound",
+          "upper_bound"
+        ],
+        "title": "NoArbitrageBounds"
+      },
+      "PortfolioMetricsRequest": {
+        "properties": {
+          "returns": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 5,
+            "title": "Returns"
+          },
+          "benchmark_returns": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark Returns"
+          },
+          "risk_free_rate": {
+            "type": "number",
+            "title": "Risk Free Rate",
+            "default": 0.02
+          },
+          "annualization_factor": {
+            "type": "integer",
+            "title": "Annualization Factor",
+            "default": 252
+          }
+        },
+        "type": "object",
+        "required": [
+          "returns"
+        ],
+        "title": "PortfolioMetricsRequest"
+      },
+      "PortfolioMetricsResponse": {
+        "properties": {
+          "annualized_return": {
+            "type": "number",
+            "title": "Annualized Return"
+          },
+          "annualized_volatility": {
+            "type": "number",
+            "title": "Annualized Volatility"
+          },
+          "sharpe_ratio": {
+            "type": "number",
+            "title": "Sharpe Ratio"
+          },
+          "sortino_ratio": {
+            "type": "number",
+            "title": "Sortino Ratio"
+          },
+          "calmar_ratio": {
+            "type": "number",
+            "title": "Calmar Ratio"
+          },
+          "omega_ratio": {
+            "type": "number",
+            "title": "Omega Ratio"
+          },
+          "max_drawdown": {
+            "type": "number",
+            "title": "Max Drawdown"
+          },
+          "ulcer_index": {
+            "type": "number",
+            "title": "Ulcer Index"
+          },
+          "tracking_error": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tracking Error"
+          },
+          "information_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Information Ratio"
+          },
+          "beta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Beta"
+          },
+          "alpha": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alpha"
+          }
+        },
+        "type": "object",
+        "required": [
+          "annualized_return",
+          "annualized_volatility",
+          "sharpe_ratio",
+          "sortino_ratio",
+          "calmar_ratio",
+          "omega_ratio",
+          "max_drawdown",
+          "ulcer_index"
+        ],
+        "title": "PortfolioMetricsResponse"
+      },
+      "RiskParityRequest": {
+        "properties": {
+          "cov_matrix": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Cov Matrix"
+          },
+          "asset_names": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset Names"
+          },
+          "budget": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cov_matrix"
+        ],
+        "title": "RiskParityRequest"
+      },
+      "RiskParityResponse": {
+        "properties": {
+          "weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Weights"
+          },
+          "risk_contributions": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Risk Contributions"
+          },
+          "portfolio_volatility": {
+            "type": "number",
+            "title": "Portfolio Volatility"
+          },
+          "converged": {
+            "type": "boolean",
+            "title": "Converged"
+          }
+        },
+        "type": "object",
+        "required": [
+          "weights",
+          "risk_contributions",
+          "portfolio_volatility",
+          "converged"
+        ],
+        "title": "RiskParityResponse"
+      },
+      "SVICalibrationRequest": {
+        "properties": {
+          "strikes": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 4,
+            "title": "Strikes"
+          },
+          "implied_vols": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 4,
+            "title": "Implied Vols"
+          },
+          "forward": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Forward"
+          },
+          "T": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "T"
+          }
+        },
+        "type": "object",
+        "required": [
+          "strikes",
+          "implied_vols",
+          "forward",
+          "T"
+        ],
+        "title": "SVICalibrationRequest"
+      },
+      "SVICalibrationResponse": {
+        "properties": {
+          "a": {
+            "type": "number",
+            "title": "A"
+          },
+          "b": {
+            "type": "number",
+            "title": "B"
+          },
+          "rho": {
+            "type": "number",
+            "title": "Rho"
+          },
+          "m": {
+            "type": "number",
+            "title": "M"
+          },
+          "sigma": {
+            "type": "number",
+            "title": "Sigma"
+          },
+          "rmse": {
+            "type": "number",
+            "title": "Rmse"
+          },
+          "fitted_vols": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Fitted Vols"
+          },
+          "converged": {
+            "type": "boolean",
+            "title": "Converged"
+          },
+          "arbitrage_checks": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Arbitrage Checks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "a",
+          "b",
+          "rho",
+          "m",
+          "sigma",
+          "rmse",
+          "fitted_vols",
+          "converged",
+          "arbitrage_checks"
+        ],
+        "title": "SVICalibrationResponse"
+      },
+      "SectorAttributionItem": {
+        "properties": {
+          "sector": {
+            "type": "string",
+            "title": "Sector"
+          },
+          "portfolio_weight": {
+            "type": "number",
+            "title": "Portfolio Weight"
+          },
+          "benchmark_weight": {
+            "type": "number",
+            "title": "Benchmark Weight"
+          },
+          "portfolio_return": {
+            "type": "number",
+            "title": "Portfolio Return"
+          },
+          "benchmark_return": {
+            "type": "number",
+            "title": "Benchmark Return"
+          },
+          "allocation_effect": {
+            "type": "number",
+            "title": "Allocation Effect"
+          },
+          "selection_effect": {
+            "type": "number",
+            "title": "Selection Effect"
+          },
+          "interaction_effect": {
+            "type": "number",
+            "title": "Interaction Effect"
+          },
+          "total_effect": {
+            "type": "number",
+            "title": "Total Effect"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sector",
+          "portfolio_weight",
+          "benchmark_weight",
+          "portfolio_return",
+          "benchmark_return",
+          "allocation_effect",
+          "selection_effect",
+          "interaction_effect",
+          "total_effect"
+        ],
+        "title": "SectorAttributionItem"
+      },
+      "StressTestRequest": {
+        "properties": {
+          "portfolio_weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Portfolio Weights"
+          },
+          "factor_exposures": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Factor Exposures"
+          },
+          "scenarios": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "additionalProperties": {
+                    "type": "number"
+                  },
+                  "type": "object"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenarios"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolio_weights",
+          "factor_exposures"
+        ],
+        "title": "StressTestRequest"
+      },
+      "StressTestResponse": {
+        "properties": {
+          "scenarios": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Scenarios"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenarios"
+        ],
+        "title": "StressTestResponse"
+      },
+      "TreeOptionRequest": {
+        "properties": {
+          "S": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "S"
+          },
+          "K": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "K"
+          },
+          "T": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "T"
+          },
+          "r": {
+            "type": "number",
+            "title": "R"
+          },
+          "sigma": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Sigma"
+          },
+          "steps": {
+            "type": "integer",
+            "maximum": 2000.0,
+            "minimum": 10.0,
+            "title": "Steps",
+            "default": 200
+          },
+          "option_type": {
+            "type": "string",
+            "enum": [
+              "call",
+              "put"
+            ],
+            "title": "Option Type",
+            "default": "call"
+          },
+          "style": {
+            "type": "string",
+            "enum": [
+              "european",
+              "american"
+            ],
+            "title": "Style",
+            "default": "american"
+          },
+          "tree_type": {
+            "type": "string",
+            "enum": [
+              "crr",
+              "jarrow_rudd",
+              "trinomial"
+            ],
+            "title": "Tree Type",
+            "default": "crr"
+          },
+          "q": {
+            "type": "number",
+            "title": "Q",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "S",
+          "K",
+          "T",
+          "r",
+          "sigma"
+        ],
+        "title": "TreeOptionRequest"
+      },
+      "TreeOptionResponse": {
+        "properties": {
+          "price": {
+            "type": "number",
+            "title": "Price"
+          },
+          "european_price": {
+            "type": "number",
+            "title": "European Price"
+          },
+          "early_exercise_premium": {
+            "type": "number",
+            "title": "Early Exercise Premium"
+          },
+          "delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta"
+          },
+          "gamma": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gamma"
+          },
+          "theta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theta"
+          },
+          "tree_type": {
+            "type": "string",
+            "title": "Tree Type"
+          },
+          "steps": {
+            "type": "integer",
+            "title": "Steps"
+          },
+          "style": {
+            "type": "string",
+            "title": "Style"
+          }
+        },
+        "type": "object",
+        "required": [
+          "price",
+          "european_price",
+          "early_exercise_premium",
+          "tree_type",
+          "steps",
+          "style"
+        ],
+        "title": "TreeOptionResponse"
+      },
+      "VaRBacktestRequest": {
+        "properties": {
+          "realized_returns": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 30,
+            "title": "Realized Returns"
+          },
+          "forecast_vars": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "minItems": 30,
+            "title": "Forecast Vars"
+          },
+          "confidence_level": {
+            "type": "number",
+            "exclusiveMaximum": 1.0,
+            "exclusiveMinimum": 0.5,
+            "title": "Confidence Level",
+            "default": 0.99
+          }
+        },
+        "type": "object",
+        "required": [
+          "realized_returns",
+          "forecast_vars"
+        ],
+        "title": "VaRBacktestRequest"
+      },
+      "VaRBacktestResponse": {
+        "properties": {
+          "n_observations": {
+            "type": "integer",
+            "title": "N Observations"
+          },
+          "n_exceptions": {
+            "type": "integer",
+            "title": "N Exceptions"
+          },
+          "expected_exceptions": {
+            "type": "number",
+            "title": "Expected Exceptions"
+          },
+          "observed_failure_rate": {
+            "type": "number",
+            "title": "Observed Failure Rate"
+          },
+          "expected_failure_rate": {
+            "type": "number",
+            "title": "Expected Failure Rate"
+          },
+          "kupiec_lr_pof": {
+            "type": "number",
+            "title": "Kupiec Lr Pof"
+          },
+          "kupiec_p_value": {
+            "type": "number",
+            "title": "Kupiec P Value"
+          },
+          "kupiec_passed": {
+            "type": "boolean",
+            "title": "Kupiec Passed"
+          },
+          "christoffersen_lr_ind": {
+            "type": "number",
+            "title": "Christoffersen Lr Ind"
+          },
+          "christoffersen_p_value": {
+            "type": "number",
+            "title": "Christoffersen P Value"
+          },
+          "independence_passed": {
+            "type": "boolean",
+            "title": "Independence Passed"
+          },
+          "conditional_coverage_lr": {
+            "type": "number",
+            "title": "Conditional Coverage Lr"
+          },
+          "conditional_coverage_p_value": {
+            "type": "number",
+            "title": "Conditional Coverage P Value"
+          },
+          "basel_traffic_light_zone": {
+            "type": "string",
+            "title": "Basel Traffic Light Zone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "n_observations",
+          "n_exceptions",
+          "expected_exceptions",
+          "observed_failure_rate",
+          "expected_failure_rate",
+          "kupiec_lr_pof",
+          "kupiec_p_value",
+          "kupiec_passed",
+          "christoffersen_lr_ind",
+          "christoffersen_p_value",
+          "independence_passed",
+          "conditional_coverage_lr",
+          "conditional_coverage_p_value",
+          "basel_traffic_light_zone"
+        ],
+        "title": "VaRBacktestResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VasicekRequest": {
+        "properties": {
+          "r0": {
+            "type": "number",
+            "title": "R0",
+            "description": "Current short rate as decimal (e.g. 0.04)"
+          },
+          "T": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "T",
+            "description": "Maturity in years"
+          },
+          "a": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "A",
+            "description": "Mean-reversion speed"
+          },
+          "b": {
+            "type": "number",
+            "title": "B",
+            "description": "Long-run mean rate as decimal"
+          },
+          "sigma": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Sigma",
+            "description": "Short rate volatility"
+          }
+        },
+        "type": "object",
+        "required": [
+          "r0",
+          "T",
+          "a",
+          "b",
+          "sigma"
+        ],
+        "title": "VasicekRequest"
+      },
+      "VasicekResponse": {
+        "properties": {
+          "price": {
+            "type": "number",
+            "title": "Price"
+          },
+          "yield": {
+            "type": "number",
+            "title": "Yield"
+          },
+          "A": {
+            "type": "number",
+            "title": "A"
+          },
+          "B": {
+            "type": "number",
+            "title": "B"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "default": "vasicek"
+          }
+        },
+        "type": "object",
+        "required": [
+          "price",
+          "yield",
+          "A",
+          "B"
+        ],
+        "title": "VasicekResponse"
+      }
+    }
+  }
+}

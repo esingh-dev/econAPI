@@ -3,311 +3,226 @@
 [![CI Pipeline](https://github.com/your-username/econAPI/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/econAPI/actions)
 [![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests: 66 Passed](https://img.shields.io/badge/tests-66%20passed-brightgreen.svg)](tests/)
+[![Tests: 116 Passed](https://img.shields.io/badge/tests-116%20passed-brightgreen.svg)](tests/)
 [![Render](https://img.shields.io/badge/Deploy%20to-Render-46E3B7.svg)](render.yaml)
-[![RapidAPI](https://img.shields.io/badge/Monetized%20on-RapidAPI-0055FF.svg)](#3-rapidapi-studio-integration--monetization)
 
-**econAPI** is a production-grade financial engineering microservice engineered with **FastAPI**, **NumPy**, **SciPy**, and **Statsmodels**. It provides high-performance calculation engines for Black-Scholes-Merton option pricing, Heston stochastic volatility with implied volatility inversion, Hierarchical Risk Parity (HRP) portfolio optimization, Extreme Value Theory (EVT) tail-risk metrics, and Nelson-Siegel yield curve calibration.
+**econAPI** is a production-grade financial engineering microservice engineered with **FastAPI**, **NumPy**, **SciPy**, **Scikit-learn**, and **Statsmodels**. It provides high-performance, hardened calculation engines for:
 
----
-
-## Table of Contents
-
-1. [Local Installation & Pytest Verification](#1-local-installation--pytest-verification)
-2. [Connecting GitHub to Render (Zero-Cost Hosting)](#2-connecting-github-to-render-zero-cost-hosting)
-3. [RapidAPI Studio Integration & Monetization](#3-rapidapi-studio-integration--monetization)
-4. [Configuring the 4 RapidAPI Pricing Tiers](#4-configuring-the-4-rapidapi-pricing-tiers)
-5. [Python SDK Client Usage (`client.py`)](#5-python-sdk-client-usage-clientpy)
-6. [API Endpoints Reference](#6-api-endpoints-reference)
-7. [Environment Variables](#7-environment-variables)
-8. [License](#8-license)
+1. **Derivatives & Volatility**: Generalized Black-Scholes-Merton with continuous dividends $q$, complete 1st and higher-order Greeks (Vanna, Volga, Charm, Veta, Color, Speed, Ultima), finite-difference verification, no-arbitrage bounds, Heston stochastic volatility with continuous Little Trap formulation, market calibration, Binomial (CRR / Jarrow-Rudd) and Trinomial American trees, Exotic options (Asian, Barrier, Digital), Monte Carlo with antithetic & control variate variance reduction, and SVI surface calibration with butterfly & calendar arbitrage checks.
+2. **Yield Curves & Fixed Income**: Nelson-Siegel and 6-parameter Nelson-Siegel-Svensson (NSS) calibration, zero-coupon, spot, forward, and par yield curves, curve bootstrapping from money market deposits, futures, and swaps, bond pricing, accrued interest (Actual/Actual & 30/360), YTM (Brent solver), Macaulay/Modified duration, Convexity, DV01/PV01, curve shock scenarios, Key-Rate Duration (KRD), and short-rate models (Vasicek, CIR, Hull-White 1-Factor).
+3. **Portfolio Construction & Optimization**: Markowitz Mean-Variance (Max Sharpe, Min Variance, Target Return/Risk), Equal Risk Contribution (ERC) Risk Parity, Inverse Volatility allocation, Black-Litterman model with investor views and posterior covariance, Rockafellar-Uryasev Linear Programming CVaR optimization, box weight constraints, turnover limits, proportional transaction cost deduction, walk-forward out-of-sample backtesting, Brinson-Fachler attribution, and comprehensive performance metrics (Sharpe, Sortino, Calmar, Omega, Max Drawdown, Ulcer Index).
+4. **Time Series Risk & Analytics**: Multi-model VaR & Expected Shortfall (Historical, Parametric Gaussian, Student-t, Cornish-Fisher expansion), RiskMetrics EWMA volatility, GARCH(1,1) Quasi-Maximum Likelihood Estimation (QMLE), multi-factor regression risk decomposition, historical & macro stress testing, EVT Peaks-Over-Threshold (GPD) with Mean Excess diagnostics, Kolmogorov-Smirnov fit tests, QQ plots, asymptotic confidence intervals, and regulatory VaR backtesting (Kupiec POF LR test, Christoffersen Independence test, Basel Traffic Light classification).
 
 ---
 
-## 1. Local Installation & Pytest Verification
+## Model Assumptions, Mathematical Formulations & Safeguards
 
-### Prerequisites
-- Python 3.11 or 3.12
-- Git
+### 1. Options and Derivatives
 
-### Setup Steps
+#### Generalized Black-Scholes-Merton (Merton 1973)
+- **Model Assumptions**: Geometric Brownian Motion $dS_t = (r - q) S_t dt + \sigma S_t dW_t$ with constant risk-free rate $r$, constant continuous dividend yield $q$, constant volatility $\sigma$, frictionless trading, and continuous rebalancing.
+- **Formulation**:
+  $$d_1 = \frac{\ln(S/K) + (r - q + \frac{1}{2}\sigma^2)T}{\sigma\sqrt{T}}, \quad d_2 = d_1 - \sigma\sqrt{T}$$
+  $$C = S e^{-q T} N(d_1) - K e^{-r T} N(d_2), \quad P = K e^{-r T} N(-d_2) - S e^{-q T} N(-d_1)$$
+- **Put-Call Parity**: $C - P = S e^{-q T} - K e^{-r T}$.
+- **No-Arbitrage Bounds**: $\max(0, S e^{-q T} - K e^{-r T}) \le C \le S e^{-q T}$ and $\max(0, K e^{-r T} - S e^{-q T}) \le P \le K e^{-r T}$.
+- **Higher-Order Greeks**:
+  - Vanna: $\frac{\partial^2 V}{\partial S \partial \sigma} = -e^{-q T} n(d_1) \frac{d_2}{\sigma}$
+  - Volga (Vomma): $\frac{\partial^2 V}{\partial \sigma^2} = \text{Vega} \cdot \frac{d_1 d_2}{\sigma}$
+  - Charm: $-\frac{\partial \Delta}{\partial T} = e^{-q T} \left[ q N(d_1) - n(d_1) \frac{2(r-q)T - d_2 \sigma \sqrt{T}}{2 T \sigma \sqrt{T}} \right]$
+  - Veta: $-\frac{\partial \text{Vega}}{\partial T}$
+  - Color: $\frac{\partial \text{Gamma}}{\partial T}$, Speed: $\frac{\partial \text{Gamma}}{\partial S}$, Ultima: $\frac{\partial \text{Volga}}{\partial \sigma}$.
+- **Safeguards**: Analytical Greeks are verified against central finite differences with max relative error tolerance $< 1\%$. Expiry ($T \le 0$), zero volatility ($\sigma \to 0$), zero strike ($K \to 0$), and zero spot ($S \to 0$) are resolved via exact limit functions.
+
+#### Heston Stochastic Volatility Model (1993)
+- **Model Assumptions**:
+  $$dS_t = (r - q) S_t dt + \sqrt{v_t} S_t dW_t^S$$
+  $$dv_t = \kappa (\theta - v_t) dt + \xi \sqrt{v_t} dW_t^v, \quad d\langle W^S, W^v \rangle_t = \rho dt$$
+- **Numerical Stability**: Uses Albrecher et al. (2007) continuous "Little Trap" formulation of the characteristic function $\phi(u)$ to eliminate complex branch-cut discontinuities.
+- **Feller Condition**: $2\kappa\theta > \xi^2$ guarantees variance stays strictly positive. Violation triggers a clear advisory warning while maintaining stable integration.
+- **Quadrature Convergence**: Adaptive Gauss-Kronrod numerical quadrature tracking absolute and relative integration error tolerances ($\le 10^{-4}$).
+- **Implied Volatility Inversion**: Brent-Decker bracketed root-finder backed by rational asymptotic fallbacks when approaching deep out-of-the-money bounds.
+- **Market Calibration**: L-BFGS-B / SLSQP optimization across strike and maturity grids minimizing price root-mean-square error (RMSE) with Feller regularization.
+
+#### American Options via Binomial & Trinomial Trees
+- **Binomial (CRR & Jarrow-Rudd)**: Discrete backward induction lattices evaluating $\max(\text{Continuation}, \text{Exercise})$.
+- **Trinomial (Kamrad-Ritchken)**: 3-branch spatial grid ($\Delta x = \sigma \sqrt{3 \Delta t}$) with second-order accuracy.
+- **Early Exercise Premium**: Output reports $P_{\text{American}} - P_{\text{European}}$.
+
+#### Exotic Derivatives
+- **Asian Options**: Geometric average price/strike exact closed form (Kemna-Vorst 1990) and arithmetic average two-moment approximation (Turnbull-Wakeman 1991).
+- **Barrier Options**: Complete analytical closed-form solutions (Reiner & Rubinstein 1991) for Up/Down, In/Out, Call/Put with cash rebates and immediate breach detection.
+- **Digital / Binary Options**: Cash-or-Nothing and Asset-or-Nothing analytical formulas.
+
+#### Monte Carlo Engine
+- **Variance Reduction**: Antithetic Variates paired with Control Variates using analytical BSM as a covariate.
+- **Reproducibility**: Deterministic PRNG seed parameter ensuring reproducible simulation runs.
+- **Diagnostics**: Standard error and 95% asymptotic confidence intervals.
+
+#### Volatility Surface & SVI
+- **Raw SVI**: $w(k) = a + b[\rho(k - m) + \sqrt{(k - m)^2 + \sigma^2}]$.
+- **Arbitrage Diagnostics**:
+  - Roger Lee extreme strike wing slope bounds: $b(1 + |\rho|) < 2$.
+  - Gatheral non-negativity of risk-neutral density: $g(k) \ge 0$.
+  - Calendar spread arbitrage: total variance non-decreasing in tenor $w(k, T_2) \ge w(k, T_1)$.
+
+---
+
+### 2. Yield Curves and Fixed Income
+
+#### Nelson-Siegel & Nelson-Siegel-Svensson (NSS)
+- **Nelson-Siegel (3-Factor)**:
+  $$y(\tau) = \beta_0 + \beta_1 \frac{1 - e^{-\tau/\lambda}}{\tau/\lambda} + \beta_2 \left(\frac{1 - e^{-\tau/\lambda}}{\tau/\lambda} - e^{-\tau/\lambda}\right)$$
+- **Nelson-Siegel-Svensson (4-Factor / 6-Parameter)**:
+  $$y(\tau) = \text{NS}(\tau) + \beta_3 \left(\frac{1 - e^{-\tau/\lambda_2}}{\tau/\lambda_2} - e^{-\tau/\lambda_2}\right)$$
+- **Optimization Stability**: Diebold-Li two-step grid search over decay parameters $(\lambda_1, \lambda_2)$ with conditional OLS for linear betas $(\beta_0, \beta_1, \beta_2, \beta_3)$, fine-tuned via bounded L-BFGS-B.
+- **Unit Convention**: Explicit support for `auto`, `percent` ($5.25$), and `decimal` ($0.0525$) with auto-scaling to avoid numerical divergence.
+- **Diagnostics**: RMSE, MAE, Max Error, $R^2$, AIC, and BIC.
+- **Robust Loss**: Optional Huber and Soft-$L_1$ loss functions for noisy or sparse sovereign debt data.
+
+#### Curve Bootstrapping & Analytics
+- **Bootstrapping**: Unwinds zero-coupon discount factors sequentially from short-term money market deposits, futures/FRAs, and par interest rate swaps.
+- **Bond Pricing**: Accrued interest (Actual/Actual and 30/360), dirty/clean price, Yield to Maturity (Brent solver), Macaulay duration, Modified duration, Convexity, and DV01 / PV01.
+- **Key-Rate Duration (KRD)**: Triangular tent-function shifts decomposing interest rate exposure across benchmark maturities ($0.25\text{Y}$ to $30\text{Y}$).
+- **Term Structure Models**:
+  - **Vasicek (1977)**: Mean-reverting Gaussian short-rate model with analytical bond pricing.
+  - **Cox-Ingersoll-Ross (1985)**: Square-root diffusion ensuring non-negative nominal interest rates.
+  - **Hull-White (1-Factor)**: Analytical zero-coupon bond pricing exactly calibrated to initial forward curve.
+
+---
+
+### 3. Portfolio Construction & Optimization
+
+#### Hierarchical Risk Parity (HRP)
+- **Algorithm (López de Prado 2016)**:
+  1. Tree clustering using single-linkage on metric correlation distance $d_{ij} = \sqrt{\frac{1}{2}(1 - \rho_{ij})}$.
+  2. Quasi-diagonalization (seriation) ordering assets along the dendrogram leaf order.
+  3. Recursive bisection allocating weights inversely proportional to cluster variance.
+- **Enhancements**:
+  - Covariance estimators: Ledoit-Wolf shrinkage, standard sample covariance, EWMA covariance, and semi-covariance.
+  - Missing-data imputation: forward-fill, dropna, mean imputation.
+  - Box constraints $[w_{\min}, w_{\max}]$ via iterative redistribution.
+  - Turnover tracking and transaction cost deduction.
+  - Walk-forward rolling out-of-sample backtesting.
+
+#### Markowitz Mean-Variance Optimization
+- Quadratic programming (SciPy SLSQP) supporting Max Sharpe, Global Minimum Variance (GMV), Target Return, and Target Risk with box bounds and turnover constraints.
+
+#### Equal Risk Contribution (ERC) / Risk Parity
+- Equalizes marginal risk contributions: $\text{TRC}_i = w_i (\Sigma w)_i / \sigma_p^2 = B_i$.
+
+#### Black-Litterman Model
+- Implied market equilibrium returns $\Pi = \lambda \Sigma w_{\text{mkt}}$ blended with investor views $P \mu = Q + \Omega$ to produce posterior expected returns $\mu_{\text{BL}}$ and covariance $\Sigma_{\text{BL}}$.
+
+#### CVaR Optimization (Rockafellar & Uryasev 2000)
+- Exact Linear Programming formulation minimizing Conditional Value-at-Risk at confidence level $\alpha$ under arbitrary scenario matrices.
+
+#### Attribution & Performance
+- **Brinson-Fachler Attribution**: Allocation effect, Selection effect, and Interaction effect vs benchmark.
+- **Risk Metrics**: Sharpe, Sortino (downside deviation), Calmar, Omega, Max Drawdown, Ulcer Index, Information Ratio, and Tracking Error.
+
+---
+
+### 4. Risk and Time Series Models
+
+#### Multi-Model Value-at-Risk & Expected Shortfall
+- **Historical Simulation**: Empirical quantile of historical return losses.
+- **Parametric Gaussian**: $\text{VaR}_\alpha = \mu + z_\alpha \sigma$.
+- **Student-t**: Heavy-tailed parametric quantile accounting for degrees of freedom.
+- **Cornish-Fisher Expansion**: Polynomial adjustment accounting for skewness $S$ and excess kurtosis $K$.
+
+#### Volatility Modeling
+- **EWMA (RiskMetrics)**: $\sigma_t^2 = \lambda \sigma_{t-1}^2 + (1 - \lambda) r_{t-1}^2$ (standard $\lambda = 0.94$).
+- **GARCH(1,1)**: Quasi-Maximum Likelihood Estimation of $\sigma_t^2 = \omega + \alpha r_{t-1}^2 + \beta \sigma_{t-1}^2$ with stationarity check ($\alpha + \beta < 1$) and unconditional long-run variance.
+
+#### Factor Models & Stress Testing
+- **Factor Models**: Ordinary least squares regression decomposing systematic vs idiosyncratic risk.
+- **Stress Testing**: Revaluation under historical crises (2008 GFC, 2020 Covid, 1987 Black Monday, Stagflation) and custom macro factor shocks.
+
+#### VaR Backtesting & Model Validation
+- **Kupiec POF LR Test**: Likelihood ratio test evaluating whether observed exception rate equals $(1 - \alpha)$.
+- **Christoffersen Independence Test**: Markov transition test checking whether exceptions cluster in time.
+- **Basel Traffic Light System**: Regulatory classification into Green, Yellow, and Red zones.
+
+#### Extreme Value Theory (EVT) Peaks-Over-Threshold
+- **GPD Formulation**: Fits Generalized Pareto Distribution to excess losses over a high threshold $u$.
+- **Diagnostics**: Mean Excess Plot, parameter stability scan, Kolmogorov-Smirnov goodness-of-fit test, and QQ plot coordinates.
+- **Confidence Intervals**: 95% asymptotic delta-method confidence intervals for VaR.
+
+---
+
+## Complete API Endpoints Catalog
+
+### Derivatives & Options (`/v1/derivatives`)
+- `POST /v1/derivatives/bsm`: Generalized BSM pricing, 1st & higher-order Greeks, no-arbitrage bounds, finite-difference verification.
+- `POST /v1/derivatives/heston`: Heston stochastic volatility with continuous Little Trap formulation, Feller check, implied volatility.
+- `POST /v1/derivatives/heston/calibrate`: Calibrate $(v_0, \kappa, \theta, \xi, \rho)$ to market option price quotes.
+- `POST /v1/derivatives/tree`: Binomial (CRR / Jarrow-Rudd) and Trinomial trees for European and American options.
+- `POST /v1/derivatives/asian`: Geometric (exact) and Arithmetic (Turnbull-Wakeman) Asian option pricing.
+- `POST /v1/derivatives/barrier`: Reiner-Rubinstein analytical pricing for Up/Down, In/Out barrier options with rebates.
+- `POST /v1/derivatives/binary`: Cash-or-Nothing and Asset-or-Nothing digital/binary option pricing.
+- `POST /v1/derivatives/monte-carlo`: Monte Carlo option pricing with Antithetic and Control Variate variance reduction.
+- `POST /v1/derivatives/svi/calibrate`: Calibrate raw SVI volatility slice with Roger Lee wing bounds and butterfly checks.
+- `POST /v1/derivatives/svi/calendar-arbitrage`: Verify absence of calendar spread arbitrage across volatility surface slices.
+
+### Fixed Income & Yield Curves (`/v1/fixed-income`)
+- `POST /v1/fixed-income/nelson-siegel`: 3-Factor Nelson-Siegel curve calibration with unit detection and fit diagnostics.
+- `POST /v1/fixed-income/nss`: 4-Factor / 6-Parameter Nelson-Siegel-Svensson curve calibration.
+- `POST /v1/fixed-income/curve-suite`: Spot, instantaneous forward, par yield curves, and discount factors.
+- `POST /v1/fixed-income/bootstrap`: Bootstrap zero curve from deposits, futures/FRAs, and interest rate swaps.
+- `POST /v1/fixed-income/bond-price`: Bond clean/dirty pricing, accrued interest, YTM solver, Macaulay/Modified duration, Convexity, DV01.
+- `POST /v1/fixed-income/curve-shock`: Parallel, steepener, flattener, and butterfly twist curve shock scenarios.
+- `POST /v1/fixed-income/key-rate-duration`: Key-Rate Duration (KRD) profile across benchmark tenors.
+- `POST /v1/fixed-income/models/vasicek`: Analytical zero-coupon bond pricing under the Vasicek model.
+- `POST /v1/fixed-income/models/cir`: Analytical zero-coupon bond pricing under the Cox-Ingersoll-Ross (CIR) model.
+- `POST /v1/fixed-income/models/hull-white`: Analytical zero-coupon bond pricing under the Hull-White 1-Factor model.
+
+### Portfolio Construction & Optimization (`/v1/portfolio`)
+- `POST /v1/portfolio/hrp`: Hierarchical Risk Parity with covariance shrinkage, constraints, and turnover tracking.
+- `POST /v1/portfolio/hrp/backtest`: Walk-forward out-of-sample backtest of HRP portfolio allocation.
+- `POST /v1/portfolio/mean-variance`: Markowitz Mean-Variance optimization (Max Sharpe, Min Variance, Target Return/Risk).
+- `POST /v1/portfolio/risk-parity`: Equal Risk Contribution (ERC) / Risk Parity optimization.
+- `POST /v1/portfolio/black-litterman`: Black-Litterman model blending market equilibrium with investor views.
+- `POST /v1/portfolio/cvar-optimization`: Rockafellar-Uryasev LP Conditional Value-at-Risk optimization.
+- `POST /v1/portfolio/attribution`: Brinson-Fachler performance attribution (allocation, selection, interaction).
+- `POST /v1/portfolio/metrics`: Risk-adjusted performance metrics (Sharpe, Sortino, Calmar, Max Drawdown, Ulcer Index).
+
+### Risk Analytics & Macro (`/v1/risk`)
+- `POST /v1/risk/evt-cvar`: Peaks-Over-Threshold tail risk VaR & CVaR with KS test, QQ plot, Mean Excess diagnostics, and CIs.
+- `POST /v1/risk/var-suite`: Multi-model VaR & Expected Shortfall (Historical, Gaussian, Student-t, Cornish-Fisher).
+- `POST /v1/risk/garch`: GARCH(1,1) Quasi-Maximum Likelihood conditional volatility modeling.
+- `POST /v1/risk/ewma`: RiskMetrics EWMA volatility modeling and path generation.
+- `POST /v1/risk/factor-model`: Multi-factor regression, beta sensitivities, and systematic vs idiosyncratic variance.
+- `POST /v1/risk/stress-test`: Historical (2008 GFC, 2020 Covid, 1987 Crash) and synthetic stress testing.
+- `POST /v1/risk/var-backtest`: Kupiec POF, Christoffersen Independence, and Basel Traffic Light VaR backtesting.
+- `POST /v1/macro/nelson-siegel`: Legacy Nelson-Siegel calibration endpoint.
+
+---
+
+## Local Installation & Verification
+
 ```bash
 # 1. Clone the repository
 git clone https://github.com/your-username/econAPI.git
 cd econAPI
 
-# 2. Create and activate a virtual environment
-python -m venv .venv
-# On Windows:
+# 2. Activate virtual environment
 .venv\Scripts\activate
-# On Linux / macOS:
-source .venv/bin/activate
 
-# 3. Install pinned dependencies
-pip install --upgrade pip
-pip install -r requirements.txt
+# 3. Run complete automated test suite (116 tests across all engines)
+pytest -v
 
-# 4. Start local development server
+# 4. Start high-performance development server
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Interactive documentation is available immediately:
+Interactive documentation is available at:
 - **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
 - **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
-- **OpenAPI JSON**: [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json)
-- **Health Check**: [http://localhost:8000/health](http://localhost:8000/health)
-
-### Running Automated Test Suites
-econAPI includes **66 comprehensive automated tests** verified against published literature benchmarks (John C. Hull, Albrecher et al., Marcos López de Prado, McNeil/Frey/Embrechts, and Nelson & Siegel):
-
-```bash
-# Run all 66 unit and integration tests
-pytest -v
-
-# Run the executive literature benchmark comparison report
-python scripts/verify_benchmarks.py
-```
+- **Interactive Studio UI**: [http://localhost:8000/](http://localhost:8000/)
 
 ---
 
-## 2. Connecting GitHub to Render (Zero-Cost Hosting)
-
-Render provides free-tier web service hosting with automatic SSL, zero-downtime deploys on Git push, and native support for Render Blueprints via `render.yaml`.
-
-```
-[Local Code] ─── git push ───> [GitHub Repository] ─── webhook ───> [Render Free Cloud]
-```
-
-### Step 1: Push Code to GitHub
-```bash
-git init
-git branch -M main
-git add .
-git commit -m "feat: complete econAPI with Render and RapidAPI rollout config"
-git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/econAPI.git
-git push -u origin main
-```
-
-### Step 2: Deploy on Render via Blueprint (1-Click)
-1. Log into your free account at [render.com](https://render.com).
-2. Click **Blueprints** in the top navigation bar.
-3. Click **New Blueprint Instance** and select your GitHub `econAPI` repository.
-4. Render will automatically detect [`render.yaml`](render.yaml) and configure:
-   - **Service Name**: `econapi`
-   - **Environment**: Python 3.11
-   - **Build Command**: `pip install --upgrade pip && pip install -r requirements.txt`
-   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-   - **Health Check**: `/health`
-5. Click **Apply**. Render will build and deploy your container.
-6. Once deployed, note your public URL:
-   `https://econapi.onrender.com`
-
----
-
-## 3. RapidAPI Studio Integration & Monetization
-
-RapidAPI serves as your monetization gateway, handling user management, credit card billing, rate limiting, and DDoS protection for **$0 upfront cost**.
-
-### Step 1: Create a Provider Account
-1. Sign up for free at [rapidapi.com](https://rapidapi.com).
-2. Go to **My APIs** $\to$ **Add New API** (or open [RapidAPI Studio](https://studio.rapidapi.com)).
-3. Enter API Details:
-   - **API Name**: `econAPI`
-   - **Short Description**: `Institutional Quantitative Finance, Derivative Pricing & Tail Risk Microservice`
-   - **Category**: `Finance`
-
-### Step 2: Import OpenAPI Specification
-1. In RapidAPI Studio, navigate to **Hub Listing** $\to$ **Definition** $\to$ **Endpoints**.
-2. Click **Import** $\to$ Select **OpenAPI (Swagger)**.
-3. Choose **Import from URL** and paste your live Render schema URL:
-   `https://econapi.onrender.com/openapi.json`
-4. RapidAPI will instantly parse all schemas, types, and endpoints:
-   - `GET /health`
-   - `POST /v1/derivatives/bsm`
-   - `POST /v1/derivatives/heston`
-   - `POST /v1/portfolio/hrp`
-   - `POST /v1/risk/evt-cvar`
-   - `POST /v1/macro/nelson-siegel`
-
-### Step 3: Configure Base Target URL & Gateway Secret
-1. Under **Target URLs**, enter your Render host:
-   `https://econapi.onrender.com`
-2. Under **Transformations / Headers**, add a forwarded secret header to authenticate requests from RapidAPI to your Render backend:
-   - Header Name: `X-API-Key`
-   - Header Value: Match the key specified in your `ECONAPI_VALID_API_KEYS` on Render (e.g. `rapidapi-gateway-secret-key-prod`).
-
----
-
-## 4. Configuring the 4 RapidAPI Pricing Tiers
-
-Navigate to **Plans & Pricing** in RapidAPI Studio and configure these 4 monetization tiers:
-
-| Tier Name | Monthly Price | Monthly Request Quota | Rate Limit | Hard / Soft Limit | Features & Restrictions | Target Audience |
-|:---|:---:|:---:|:---:|:---:|:---|:---|
-| **Free Sandbox** | **$0.00 / mo** | **500 requests** | 1 req / sec | **Hard Limit** (Stops on cap) | • Access to `/health` and `/v1/derivatives/bsm`<br>• Single-asset Greeks | Academic researchers, students, exploratory developers |
-| **Pro** | **$49.00 / mo** | **25,000 requests** | 10 req / sec | **Soft Limit** ($0.003 / extra req) | • All endpoints unlocked<br>• HRP up to 20 assets<br>• EVT Tail Risk (VaR/CVaR) | Individual quants, crypto traders, boutique wealth advisors |
-| **Ultra** | **$149.00 / mo** | **150,000 requests** | 30 req / sec | **Soft Limit** ($0.0015 / extra req) | • High-priority compute queue<br>• HRP up to 100 assets<br>• Full Heston & Nelson-Siegel | Systematic prop trading desks, hedge fund analysts |
-| **Enterprise** | **$499.00 / mo** | **500,000 requests** | 100 req / sec | **Soft Limit** ($0.0008 / extra req) | • Institutional throughput<br>• Unlimited asset clusters<br>• 99.9% uptime SLA<br>• Email & Discord support | FinTech platforms, neo-banks, asset management firms |
-
----
-
-## 5. Python SDK Client Usage (`client.py`)
-
-A clean, strongly-typed client library is provided in [`client.py`](client.py). Developers can use it directly or bundle it into a package for PyPI.
-
-### Basic Initialization
-```python
-from client import EconAPI
-
-# Initialize client using your RapidAPI Key
-client = EconAPI(
-    api_key="YOUR_RAPIDAPI_KEY",
-    rapidapi_host="econapi.p.rapidapi.com"
-)
-
-# Check service status
-health = client.health()
-print("Service Status:", health)  # {"status": "healthy", "version": "1.0.0"}
-```
-
-### 1. Black-Scholes-Merton Pricing & Analytical Greeks
-```python
-bsm = client.price_bsm(
-    spot=100.0,
-    strike=100.0,
-    time_to_maturity=1.0,
-    risk_free_rate=0.05,
-    volatility=0.20,
-    option_type="call"
-)
-
-print(f"Call Price: ${bsm['price']:.4f}")
-print(f"Delta: {bsm['delta']:.4f} | Gamma: {bsm['gamma']:.4f} | Vega: {bsm['vega']:.4f}")
-```
-
-### 2. Heston Stochastic Volatility & Implied Volatility
-```python
-heston = client.price_heston(
-    spot=100.0,
-    strike=100.0,
-    time_to_maturity=1.0,
-    risk_free_rate=0.05,
-    v0=0.04,          # initial variance
-    kappa=2.0,        # mean-reversion speed
-    theta=0.04,       # long-term variance
-    xi=0.30,          # vol-of-vol
-    rho=-0.70,        # asset-variance correlation
-    option_type="call"
-)
-
-print(f"Heston Price: ${heston['price']:.4f}")
-print(f"Extracted Implied Volatility: {heston['implied_volatility']*100:.2f}%")
-```
-
-### 3. Hierarchical Risk Parity (HRP) Portfolio Allocation
-```python
-import numpy as np
-
-# 200 daily returns across 3 assets
-rng = np.random.default_rng(42)
-returns = rng.normal(0.0005, 0.02, size=(200, 3)).tolist()
-
-hrp = client.optimize_hrp(
-    returns=returns,
-    asset_names=["SPY", "TLT", "GLD"]
-)
-
-print("Optimal Portfolio Weights:", hrp["weights"])
-print(f"Portfolio Annualized Sharpe Ratio: {hrp['sharpe_ratio']:.2f}")
-```
-
-### 4. Extreme Value Theory (EVT) VaR & Expected Shortfall
-```python
-# Historical return distribution with tail risk
-losses = rng.normal(0.0005, 0.02, size=500).tolist()
-
-evt = client.compute_evt_cvar(
-    returns=losses,
-    confidence_level=0.99,
-    threshold_quantile=0.95
-)
-
-print(f"GPD Shape (xi): {evt['gpd_params']['xi']:.4f}")
-print(f"99% Value-at-Risk (VaR): {evt['var']*100:.2f}%")
-print(f"99% Expected Shortfall (CVaR): {evt['cvar']*100:.2f}%")
-```
-
-### 5. Nelson-Siegel Yield Curve Calibration
-```python
-tenors = [0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 7.0, 10.0, 20.0, 30.0]
-yields = [5.25, 5.10, 4.85, 4.50, 4.35, 4.20, 4.15, 4.10, 4.30, 4.40]
-
-curve = client.fit_yield_curve(tenors=tenors, yields=yields)
-
-print(f"Level (beta0): {curve['beta_0']:.4f}")
-print(f"Slope (beta1): {curve['beta_1']:.4f}")
-print(f"Curvature (beta2): {curve['beta_2']:.4f}")
-print(f"Decay (lambda): {curve['lambda_param']:.4f}")
-print(f"Calibration RMSE: {curve['rmse']:.6f}%")
-```
-
----
-
-## 6. API Endpoints Reference
-
-All endpoints expect JSON payloads and return JSON responses.
-
-### `POST /v1/derivatives/bsm`
-- **Request Body**:
-  - `S` (float, > 0): Spot price.
-  - `K` (float, > 0): Strike price.
-  - `T` (float, > 0): Expiration in years.
-  - `r` (float): Continuously compounded risk-free rate.
-  - `sigma` (float, > 0): Annual volatility.
-  - `option_type` (string): `"call"` or `"put"`.
-- **Response**: `price`, `delta`, `gamma`, `vega`, `theta`, `rho`.
-
-### `POST /v1/derivatives/heston`
-- **Request Body**: `S`, `K`, `T`, `r`, `v0`, `kappa`, `theta`, `xi`, `rho` $\in [-1, 1]$, `option_type`.
-- **Response**: `price`, `implied_volatility`.
-
-### `POST /v1/portfolio/hrp`
-- **Request Body**:
-  - `returns` (list of lists of floats): Matrix of historical returns $(T \ge 2, N \ge 2)$.
-  - `asset_names` (list of str, optional): Identifiers for each asset.
-- **Response**: `weights` (dict), `portfolio_variance`, `sharpe_ratio`.
-
-### `POST /v1/risk/evt-cvar`
-- **Request Body**:
-  - `returns` (list of floats, $\ge 50$ observations): Historical asset return series.
-  - `confidence_level` (float, $0.5 < \alpha < 1.0$): VaR confidence level (default `0.99`).
-  - `threshold_quantile` (float, $0.5 < u < 1.0$): POT threshold quantile (default `0.95`).
-- **Response**: `gpd_params` (`xi`, `beta`, `threshold`, `n_exceedances`, `n_total`), `var`, `cvar`, `confidence_level`.
-
-### `POST /v1/macro/nelson-siegel`
-- **Request Body**:
-  - `tenors` (list of floats, $\ge 4$ tenors): Maturities in years.
-  - `yields` (list of floats, same length): Observed yields.
-- **Response**: `beta_0`, `beta_1`, `beta_2`, `lambda_param`, `fitted_yields`, `rmse`.
-
----
-
-## 7. Environment Variables
-
-All settings use the `ECONAPI_` prefix and can be configured via a `.env` file or cloud platform settings:
-
-| Variable | Type | Default | Description |
-|:---|:---:|:---:|:---|
-| `ECONAPI_APP_NAME` | string | `econAPI` | Application display name |
-| `ECONAPI_VERSION` | string | `1.0.0` | API release version |
-| `ECONAPI_ENVIRONMENT` | string | `development` | `development` (bypasses auth) or `production` (enforces API key) |
-| `ECONAPI_VALID_API_KEYS` | JSON list | `[]` | List of allowed API keys (e.g. `["rapidapi-gateway-secret-key-prod"]`) |
-| `ECONAPI_CORS_ORIGINS` | JSON list | `["*"]` | Allowed CORS origins for browser dashboards |
-| `ECONAPI_HOST` | string | `0.0.0.0` | Bind host interface |
-| `ECONAPI_PORT` | integer | `8000` | Bind port (overridden dynamically by Render via `$PORT`) |
-
----
-
-## 8. License
+## License
 
 This project is licensed under the [MIT License](LICENSE).
