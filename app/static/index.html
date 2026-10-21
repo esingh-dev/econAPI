@@ -9,7 +9,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- Chart.js 4.4 -->
+<!-- Chart.js 4.4 with multi-CDN fallback -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+if (typeof Chart === 'undefined') {
+  document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"><\/script>');
+}
+</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -230,6 +236,9 @@ footer{border-top:1px solid rgba(255,255,255,0.06);padding:50px 32px;background:
       <a href="#integrate"  class="nav-link">API Integration</a>
     </div>
     <div class="nav-actions">
+      <div class="nav-pill" style="cursor:pointer;border-color:rgba(0,229,255,0.3);background:rgba(0,229,255,0.06)" onclick="promptApiKey()" title="Click to change or enter your custom API Key">
+        <span class="dot" style="background:var(--c)"></span>Key: <span id="nav-key-display">econ_live_demo</span> 🔑
+      </div>
       <a href="/docs" target="_blank" class="btn-docs">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
         Swagger Docs
@@ -1281,10 +1290,39 @@ System.out.println(<span class="str">"Status: "</span> + resp.body());</div>
 <script>
 'use strict';
 
-// ── Chart.js Global Theme ──────────────────────────────────────────
+// ── API Key Management (100% Real API Authentication) ──────────────
+function getApiKey() {
+  return localStorage.getItem('econ_api_key') || 'econ_live_demo_key';
+}
+
+function setApiKey(key) {
+  const clean = (key || 'econ_live_demo_key').trim();
+  localStorage.setItem('econ_api_key', clean);
+  const el = document.getElementById('nav-key-display');
+  if (el) el.textContent = clean.slice(0, 14) + (clean.length > 14 ? '...' : '');
+}
+
+function promptApiKey() {
+  const current = getApiKey();
+  const input = prompt("Enter your econAPI key (Default: econ_live_demo_key):", current);
+  if (input !== null && input.trim()) {
+    setApiKey(input.trim());
+    updateBSM();
+  }
+}
+
+function getApiHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'X-API-Key': getApiKey()
+  };
+}
+
+// ── Chart.js Global Theme & Safe Mounting ───────────────────────────
 const CHART_CONFIG = {
   responsive: true,
   maintainAspectRatio: false,
+  animation: { duration: 300 },
   plugins: {
     legend: {
       labels: { color: '#64748B', font: { family: "'JetBrains Mono'", size: 10 }, boxWidth: 10, padding: 12 }
@@ -1301,14 +1339,27 @@ function noLegend() {
 
 const charts = {};
 function getOrInitChart(id, config) {
-  if (charts[id]) { charts[id].destroy(); }
-  const ctx = document.getElementById(id);
-  if (!ctx) return null;
-  charts[id] = new Chart(ctx, config);
-  return charts[id];
+  if (typeof Chart === 'undefined') {
+    setTimeout(() => getOrInitChart(id, config), 150);
+    return null;
+  }
+  const canvas = document.getElementById(id);
+  if (!canvas) return null;
+
+  if (charts[id]) {
+    try { charts[id].destroy(); } catch (e) {}
+  }
+
+  try {
+    charts[id] = new Chart(canvas, config);
+    return charts[id];
+  } catch (err) {
+    console.error("Chart render error on", id, err);
+    return null;
+  }
 }
 
-// ── Tab Navigation ──────────────────────────────────────────────────
+// ── Tab Navigation & Active Chart Rendering ─────────────────────────
 function switchDomain(domainId) {
   document.querySelectorAll('.stab').forEach(b => b.classList.remove('on'));
   document.querySelectorAll('.studio').forEach(s => s.classList.remove('on'));
@@ -1316,6 +1367,22 @@ function switchDomain(domainId) {
   const studio = document.getElementById('studio-' + domainId);
   if (btn) btn.classList.add('on');
   if (studio) studio.classList.add('on');
+
+  // Trigger chart initialization for active studio after display:block
+  setTimeout(() => {
+    if (domainId === 'derivatives') {
+      updateBSM();
+    } else if (domainId === 'fixed-income') {
+      fetchNSS();
+      updateBondPrice();
+    } else if (domainId === 'portfolio') {
+      runHRP();
+      runMVOComparison();
+    } else if (domainId === 'risk') {
+      updateEVT();
+      runVaRSuite();
+    }
+  }, 40);
 }
 
 function switchSubStudio(domain, subId) {
@@ -1369,7 +1436,6 @@ function showCode(lang) {
   });
 }
 
-// ── Debounce Utility ────────────────────────────────────────────────
 function debounce(fn, ms) {
   let timer;
   return function(...args) {
@@ -1379,7 +1445,7 @@ function debounce(fn, ms) {
 }
 
 // ═════════════════════════════════════════════════════════════════════
-// DOMAIN 1: DERIVATIVES & VOLATILITY CONTROLLERS (100% LIVE API)
+// DOMAIN 1: DERIVATIVES & VOLATILITY (100% REAL REST API)
 // ═════════════════════════════════════════════════════════════════════
 let bsmType = 'call';
 function setBsmType(t) {
@@ -1408,7 +1474,7 @@ const updateBSM = debounce(async function() {
   try {
     const res = await fetch('/v1/derivatives/bsm', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getApiHeaders(),
       body: JSON.stringify({ S, K, T, r, sigma: vol, option_type: bsmType, q, validate_greeks: true })
     });
     if (!res.ok) throw new Error(await res.text());
@@ -1435,7 +1501,6 @@ const updateBSM = debounce(async function() {
     if (data.color !== null) document.getElementById('g-color').textContent = data.color.toFixed(4);
     if (data.speed !== null) document.getElementById('g-speed').textContent = data.speed.toFixed(6);
 
-    // Badges
     const pBadge = document.getElementById('badge-parity');
     if (pBadge) pBadge.textContent = 'PASS [|C-P-Fwd| < 1e-6]';
     const bBadge = document.getElementById('badge-bounds');
@@ -1449,39 +1514,38 @@ const updateBSM = debounce(async function() {
   }
 }, 80);
 
-function renderBsmChart(spot, strike, T, r, vol, q, type) {
+async function renderBsmChart(spot, strike, T, r, vol, q, type) {
   const spots = [];
   const minS = Math.max(10, spot * 0.4);
   const maxS = spot * 1.6;
-  const step = (maxS - minS) / 30;
+  const step = (maxS - minS) / 24;
 
   for (let s = minS; s <= maxS; s += step) {
     spots.push(parseFloat(s.toFixed(1)));
   }
 
-  // Purely fetch vector profile from API
-  Promise.all([
-    fetch('/v1/derivatives/bsm', {
+  // Purely fetch vector profile via batch BSM API
+  try {
+    const items = spots.map(s => ({
+      S: s, K: strike, T, r, sigma: vol, option_type: type, q
+    }));
+    const res = await fetch('/v1/batch/bsm', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ S: spot, K: strike, T, r, sigma: vol, option_type: type, q })
-    }).then(r => r.json())
-  ]).then(([center]) => {
-    // Generate spot payoff curve
-    const prices = spots.map(s => {
-      const intVal = Math.max(0, type === 'call' ? s - strike : strike - s);
-      const approxVal = intVal + Math.max(0, center.price - Math.abs(spot - strike) * 0.3) * Math.exp(-Math.pow((s - spot)/40, 2));
-      return approxVal;
+      headers: getApiHeaders(),
+      body: JSON.stringify({ items })
     });
+    if (!res.ok) throw new Error(await res.text());
+    const d = await res.json();
+    const prices = d.results.map(r => r.result ? r.result.price : 0);
     const payoffs = spots.map(s => Math.max(0, type === 'call' ? s - strike : strike - s));
 
     getOrInitChart('chart-bsm-payoff', {
       type: 'line',
       data: {
-        labels: spots,
+        labels: spots.map(s => '$' + s),
         datasets: [
-          { label: 'Option Fair Value ($)', data: prices, borderColor: '#00E5FF', borderWidth: 2.2, tension: 0.25, pointRadius: 0 },
-          { label: 'Intrinsic Payoff at Expiry', data: payoffs, borderColor: '#00FFA3', borderWidth: 1.5, borderDash: [4, 4], pointRadius: 0 }
+          { label: 'Live API Theoretical Price ($)', data: prices, borderColor: '#00E5FF', borderWidth: 2.2, tension: 0.25, pointRadius: 0 },
+          { label: 'Intrinsic Payoff at Expiry ($)', data: payoffs, borderColor: '#00FFA3', borderWidth: 1.5, borderDash: [4, 4], pointRadius: 0 }
         ]
       },
       options: {
@@ -1489,7 +1553,9 @@ function renderBsmChart(spot, strike, T, r, vol, q, type) {
         interaction: { mode: 'index', intersect: false }
       }
     });
-  });
+  } catch (err) {
+    console.error("BSM chart error:", err);
+  }
 }
 
 // ── Heston Controller ───────────────────────────────────────────────
@@ -1507,7 +1573,6 @@ const updateHeston = debounce(async function() {
   document.getElementById('vhXi').textContent = xi.toFixed(2);
   document.getElementById('vhRho').textContent = rho.toFixed(2);
 
-  // Feller check: 2*kappa*theta > xi^2
   const fellerVal = 2 * kappa * theta;
   const xi2 = xi * xi;
   const fellerSatisfied = fellerVal > xi2;
@@ -1520,7 +1585,7 @@ const updateHeston = debounce(async function() {
   try {
     const res = await fetch('/v1/derivatives/heston', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getApiHeaders(),
       body: JSON.stringify({ S, K, T, r, v0, kappa, theta, xi, rho, option_type: 'call' })
     });
     if (!res.ok) throw new Error(await res.text());
@@ -1530,11 +1595,10 @@ const updateHeston = debounce(async function() {
     document.getElementById('heston-iv').textContent = (data.implied_volatility * 100).toFixed(2) + '%';
     document.getElementById('badge-heston-err').textContent = '< 1.2e-8 [CONVERGED]';
 
-    // Generate Vol Smile across strikes
     const strikes = [75, 85, 95, 100, 105, 115, 125];
     const smileCalls = strikes.map(k => fetch('/v1/derivatives/heston', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getApiHeaders(),
       body: JSON.stringify({ S, K: k, T, r, v0, kappa, theta, xi, rho, option_type: 'call' })
     }).then(r => r.json()));
 
@@ -1561,7 +1625,7 @@ async function runTreeSimulation() {
   try {
     const res = await fetch('/v1/derivatives/tree', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getApiHeaders(),
       body: JSON.stringify({ S: 100, K: 100, T: 1.0, r: 0.05, sigma: 0.20, steps: 200, option_type: 'call', style: 'american', tree_type: 'crr' })
     });
     const d = await res.json();
@@ -1575,15 +1639,15 @@ async function runExoticsSimulation() {
   try {
     const [asianRes, barrierRes, binaryRes] = await Promise.all([
       fetch('/v1/derivatives/asian', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: getApiHeaders(),
         body: JSON.stringify({ S: 100, K: 100, T: 1.0, r: 0.05, sigma: 0.20, averaging_type: 'arithmetic', option_type: 'call', n_obs: 252 })
       }).then(r => r.json()),
       fetch('/v1/derivatives/barrier', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: getApiHeaders(),
         body: JSON.stringify({ S: 100, K: 100, H: 120, T: 1.0, r: 0.05, sigma: 0.20, barrier_type: 'up_and_out', option_type: 'call', rebate: 0.0 })
       }).then(r => r.json()),
       fetch('/v1/derivatives/binary', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: getApiHeaders(),
         body: JSON.stringify({ S: 100, K: 100, T: 1.0, r: 0.05, sigma: 0.20, payoff_type: 'cash_or_nothing', option_type: 'call', cash_amount: 1.0 })
       }).then(r => r.json())
     ]);
@@ -1597,7 +1661,7 @@ async function runExoticsSimulation() {
 async function runMCSimulation() {
   try {
     const res = await fetch('/v1/derivatives/monte-carlo', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: getApiHeaders(),
       body: JSON.stringify({ S: 100, K: 100, T: 1.0, r: 0.05, sigma: 0.20, payoff_style: 'european', n_paths: 25000, n_steps: 100, use_antithetic: true, use_control_variate: true })
     });
     const d = await res.json();
@@ -1607,14 +1671,13 @@ async function runMCSimulation() {
   } catch(e) { console.error(e); }
 }
 
-// ── SVI Arbitrage Calibration ───────────────────────────────────────
 async function runSVICalibration() {
   try {
     const strikes = [80, 90, 100, 110, 120];
     const vols = [0.235, 0.210, 0.200, 0.198, 0.212];
     const res = await fetch('/v1/derivatives/svi/calibrate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getApiHeaders(),
       body: JSON.stringify({ strikes, implied_vols: vols, forward: 100.0, T: 1.0 })
     });
     const d = await res.json();
@@ -1658,11 +1721,11 @@ async function fetchNSS() {
   try {
     const [nssRes, suiteRes] = await Promise.all([
       fetch('/v1/fixed-income/nss', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: getApiHeaders(),
         body: JSON.stringify({ tenors: TENORS, yields })
       }).then(r => r.json()),
       fetch('/v1/fixed-income/curve-suite', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: getApiHeaders(),
         body: JSON.stringify({ tenors: TENORS, spot_rates: yields })
       }).then(r => r.json())
     ]);
@@ -1712,11 +1775,11 @@ const updateBondPrice = debounce(async function() {
   try {
     const [bndRes, krdRes] = await Promise.all([
       fetch('/v1/fixed-income/bond-price', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: getApiHeaders(),
         body: JSON.stringify({ coupon_rate: cpn, maturity: mat, ytm, face_value: 100.0, frequency: 2 })
       }).then(r => r.json()),
       fetch('/v1/fixed-income/key-rate-duration', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: getApiHeaders(),
         body: JSON.stringify({ coupon_rate: cpn, maturity: mat, current_yield: ytm, key_tenors: [0.25, 1, 2, 5, 10, 20, 30] })
       }).then(r => r.json())
     ]);
@@ -1747,7 +1810,7 @@ const updateBondPrice = debounce(async function() {
 async function simulateCurveShock(scenario) {
   try {
     const res = await fetch('/v1/fixed-income/curve-shock', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: getApiHeaders(),
       body: JSON.stringify({ tenors: TENORS, yields: [0.045, 0.045, 0.045, 0.045, 0.045, 0.045, 0.045], scenario, shift_bps: 25.0 })
     });
     const d = await res.json();
@@ -1784,7 +1847,7 @@ async function runHRP() {
   const estimator = document.getElementById('hrp-cov').value;
   try {
     const res = await fetch('/v1/portfolio/hrp', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: getApiHeaders(),
       body: JSON.stringify({ returns: SAMPLE_RETURNS, asset_names: ASSET_NAMES, cov_estimator: estimator, tx_cost_bps: 12.5 })
     });
     const d = await res.json();
@@ -1857,7 +1920,7 @@ const updateEVT = debounce(async function() {
 
   try {
     const res = await fetch('/v1/risk/evt-cvar', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: getApiHeaders(),
       body: JSON.stringify({ returns: FAT_TAIL_RETURNS, confidence_level: conf, threshold_quantile: thresh, include_diagnostics: true })
     });
     const d = await res.json();
@@ -1869,7 +1932,6 @@ const updateEVT = debounce(async function() {
     document.getElementById('evt-cvar').textContent = `${(d.cvar * 100).toFixed(2)}%`;
     document.getElementById('evt-ci').textContent = `[${(d.var_ci_95_lower * 100).toFixed(2)}%, ${(d.var_ci_95_upper * 100).toFixed(2)}%]`;
 
-    // Histogram chart
     getOrInitChart('chart-evt-dist', {
       type: 'bar',
       data: {
@@ -1886,7 +1948,7 @@ const updateEVT = debounce(async function() {
 async function runVaRSuite() {
   try {
     const res = await fetch('/v1/risk/var-suite', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: getApiHeaders(),
       body: JSON.stringify({ returns: FAT_TAIL_RETURNS, confidence_level: 0.99, time_horizon_days: 1 })
     });
     const d = await res.json();
@@ -1920,7 +1982,7 @@ async function runEWMAChart() {
 async function probeHealth() {
   const t0 = performance.now();
   try {
-    const res = await fetch('/health');
+    const res = await fetch('/health', { headers: getApiHeaders() });
     const lat = (performance.now() - t0).toFixed(0);
     const el = document.getElementById('hero-latency');
     if (el) el.textContent = lat + ' ms';
@@ -1929,9 +1991,14 @@ async function probeHealth() {
 
 // ── Init on DOM Load ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
+  setApiKey(getApiKey());
   probeHealth();
   updateBSM();
-  fetchNSS();
+  // Also load default short-rate models and curve shocks early
+  setTimeout(() => {
+    fetchNSS();
+    updateBondPrice();
+  }, 100);
 });
 </script>
 </body>
