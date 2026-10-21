@@ -13,8 +13,12 @@ from fastapi.staticfiles import StaticFiles
 import time
 
 from app.api.v1_derivatives import router as derivatives_router
+from app.api.v1_fixed_income import router as fixed_income_router
 from app.api.v1_portfolio import router as portfolio_router
 from app.api.v1_risk import router as risk_router
+from app.api.v1_market import router as market_router
+from app.api.v1_backtest import router as backtest_router
+from app.api.v1_batch import router as batch_router
 from app.config import settings
 
 
@@ -42,14 +46,15 @@ async def process_time_and_auth_middleware(request: Request, call_next):
         exempt_prefixes = ("/docs", "/redoc", "/openapi.json", "/health", "/static")
         path = request.url.path
         is_exempt = path == "/" or any(path == prefix or path.startswith(prefix) for prefix in exempt_prefixes)
-        is_dashboard_request = request.headers.get("sec-fetch-site") in ("same-origin", "same-site") or "localhost" in request.headers.get("host", "")
+        is_dashboard_request = request.headers.get("sec-fetch-site") in ("same-origin", "same-site") or "localhost" in request.headers.get("host", "") or "127.0.0.1" in request.headers.get("host", "")
         if not is_exempt and not is_dashboard_request:
             api_key = request.headers.get("X-API-Key")
-            if not api_key or api_key not in settings.VALID_API_KEYS:
+            valid_keys = settings.VALID_API_KEYS or ["econ_live_demo_key"]
+            if not api_key or api_key not in valid_keys:
                 return JSONResponse(
                     status_code=status.HTTP_403_FORBIDDEN,
                     content={
-                        "detail": "Forbidden: Invalid or missing API Key",
+                        "detail": "Forbidden: Invalid or missing API Key. Provide 'X-API-Key: econ_live_demo_key' or your institutional key.",
                         "error_type": "AuthenticationError",
                     },
                 )
@@ -110,8 +115,12 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
 
 # Include API routers
 app.include_router(derivatives_router)
+app.include_router(fixed_income_router)
 app.include_router(portfolio_router)
 app.include_router(risk_router)
+app.include_router(market_router)
+app.include_router(backtest_router)
+app.include_router(batch_router)
 
 
 # Health check endpoint
